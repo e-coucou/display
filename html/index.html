@@ -131,7 +131,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br>| v 1.03</aside>
+  <aside >Avril, 2019<br>| v 1.05</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -1007,7 +1007,11 @@ function credClick() {
     val = d3.select('#password').property('value');
     if (val!='') password=val;
     code =btoa(username+':'+password);
-	d3.select('#connexion').style('background',"yellow");
+	if (username!='' && password != '') {
+		infoG.select('text').text(code);
+		infoG.select('circle').attr('fill','blue');
+	}
+//	d3.select('#connexion').style('background',"yellow");
 //	console.log(code);
     return false;
 }
