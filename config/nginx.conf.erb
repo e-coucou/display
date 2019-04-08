@@ -25,8 +25,8 @@ http {
 
 
     server {
-        listen       80;
-        server_name  display-rky.e-coucou.com;
+        listen       <%= ENV['PORT'] %>;
+        server_name  _;
 
 
         location / {
