@@ -1,38 +1,46 @@
+#user  nobody;
+worker_processes  auto;
 daemon off;
-# Heroku dynos.
-worker_processes auto;
+
+error_log  logs/error.log;
+
 
 events {
-  use epoll;
-  accept_mutex on;
-  worker_connections 1024;
+    worker_connections  1024;
 }
 
+
 http {
-  gzip on;
-  gzip_comp_level 2;
-  gzip_min_length 512;
+    include       mime.types;
+    default_type  application/octet-stream;
 
-  server_tokens off;
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
 
-  log_format l2met 'measure#nginx.service=$request_time request_id=$http_x_request_id';
-  access_log 'logs/nginx/access.log' l2met;
-  error_log 'logs/nginx/error.log';
+    access_log  logs/access.log  main;
+
+    sendfile        on;
+    keepalive_timeout  65;
 
 
-  include mime.types;
-  default_type application/octet-stream;
-  sendfile on;
+    server {
+        listen       80;
+        server_name  display-rky.e-coucou.com;
 
-  # Must read the body in 5 seconds.
-  client_body_timeout 5;
 
-  server {
-    listen 80;
-    server_name localhost;
-    keepalive_timeout 5;
-    client_max_body_size 1M;
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
 
-    root /html; # path to your app
-  }
+
+        # redirect server error pages to the static page /50x.html
+        #
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+
+    }
 }
