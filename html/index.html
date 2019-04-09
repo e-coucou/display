@@ -131,7 +131,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br>| v 1.05</aside>
+  <aside >Avril, 2019<br><br> | v 1.07</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -158,8 +158,10 @@ input#to {
     </form></div>
     <form id="loadjson" method="post" enctype="multipart/form-data">
     <div>
-        <label for="profile_pic">Sélectionnez le fichier à utiliser de configuration</label><br><br>
-        <input type="file" id="refJson" name="refJson" accept=".json">
+        <label for="profile_pic">Sélectionnez le fichier à utiliser :</label><br><br>
+        <input type="file" id="refJson" name="refJson" accept=".json"><br><br>
+        Le format du fichier<br>[{nom:'variable_1',select:0/1/2/3},<br>{nom:'variable_2',select:2},<br>{...},{}]<br>
+        select : 0(non affiché), 1(cumulé), 2(variable simple), 3(quotient)
     </div>
     </form>
     <div id="chart"></div>
@@ -178,7 +180,7 @@ input#to {
 	var interval = 'P1D'
 	var urlBase = 'https://cors-anywhere.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
 	var urlBaseOld = 'https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
-    var urlTime = '&from=2019-02-01T00%3A00%3A00.000Z&to=2019-02-28T00%3A00%3A00.000Z';
+    var urlTime = '';
     var urlRes = '&resolution='+interval;
     var url = '';
 	var QUS_EP = 'RON_QUS_Soude_HCN,RON_QUS_Ammoniaque_HCN,RON_QUS_Azote_HCN,RON_QUS_Azote_HCN,RON_QUS_Gaz_Ferme_HCN,RON_QUS_Gaz_Procédé_HCN,RON_QUS_Vapeur_HCN,RON_QUS_ED_HCN,RON_QUS_Air_HCN,RON_QUS_Vapeur_Produite_HCN';
@@ -357,6 +359,8 @@ function click(d,i) {
     selInter=i;
     interG.selectAll('circle').attr('fill','#2E2D88');
     urlRes = '&resolution='+d.v;
+    updateDate();
+    console.log(urlTime);
     url = urlBase+refListe +urlTime+urlRes;
 //    console.log('avant: ',url);
     start(url,0); //0-variable 1-cumul 2-diviseur
@@ -391,10 +395,17 @@ function graphe(v=0) {
              return (unSelect.find(a=>{return o.timestamp==a;}) == undefined)? o.value:-Infinity; }));
     yMin = Math.min.apply(Math, AllData[v].values.map(function(o) { 
              return (unSelect.find(a=>{return o.timestamp==a;}) == undefined)? o.value:Infinity; }));
+    yMaxR = Math.max.apply(Math, AllData[indexRef].values.map(function(o) { 
+             return (unSelect.find(a=>{return o.timestamp==a;}) == undefined)? o.value:-Infinity; }));
+    yMinR = Math.min.apply(Math, AllData[indexRef].values.map(function(o) { 
+             return (unSelect.find(a=>{return o.timestamp==a;}) == undefined)? o.value:Infinity; }));
 
 //	console.log(yMin,yMax);
     y = d3.scaleLinear()
         .domain([yMin, yMax]).nice()
+        .range([height - margin.bottom, margin.top]);
+    z = d3.scaleLinear()
+        .domain([yMinR, yMaxR]).nice()
         .range([height - margin.bottom, margin.top]);
 
 	graph.call(tip);
@@ -403,6 +414,9 @@ function graphe(v=0) {
 //        .attr('class', 'grid')
         .attr('transform', `translate(` +(margin.left)+`,0)`)
         .call(d3.axisLeft(y));
+    graph.append('g')
+        .attr('transform', `translate(` +(width-margin.right)+`,0)`)
+        .call(d3.axisRight(z));
 
     graph.append('g')
         .attr('transform', `translate(0,` +(height-margin.bottom)+`)`)
@@ -413,18 +427,19 @@ function graphe(v=0) {
 			.attr("dy", ".15em")
 			.attr("transform", "rotate(-65)");
 
-graph.append('g').append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", 52).attr('x',-18)
-      .attr("dy", ".71em")
-      .style("text-anchor", "end")
-      .text('unité : '+AllData[v].unit);
+    graph.append('g').append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 52).attr('x',-18)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text('unité : '+AllData[v].unit);
 	
 //	console.log(AllData[v].values);
-	var dta = AllData[v].values;
+	var dta = AllData[v].values,
+        dtb = AllData[indexRef].values;
     var	bar = graph.selectAll()
             .data(dta).enter()
-        .append("g");
+            .append("g");
 	
 //    console.log(y.domain()[0],y.domain()[1]);
 //    AllData.each(d=> {d.values.each(a=>{console.log(a.value);})});
@@ -493,11 +508,28 @@ graph.append('g').append("text")
           .attr('y', (d) =>  (d.value<0?(y(d.value)-25):(25+y(d.value))))
           .attr('fill', 'white')
           .attr('text-anchor', 'middle')
-          .text(d=>{return valFormat(d.value);});
-//          .text(d=>{return d.value>10?Math.round(d.value):Math.round(d.value*100.0)/100;});
-	
-    }
-//-------------------------------------------------------
+          .text(d=>{return valFormat(d.value);});	
+
+    var line = d3.line()
+            .x( //d=>{ return (unSelect.find((a)=>{return d.timestamp===a;}) == undefined)?x(toDate(d.timestamp)):'';})
+               d => x(toDate(d.timestamp)))
+//            .y( d => z(d.value))
+            .y( d=>{ return (unSelect.find((a)=>{return d.timestamp===a;}) == undefined)?z(d.value):z(yMinR);})
+            .curve(d3.curveLinear);
+
+    d3.select('#seconde').selectAll('path').remove();
+
+    graph.append("path")
+        .datum(dtb)
+            .attr('id','seconde')
+            .style("fill","none")
+            .style("stroke","#ff7070")
+            .style("stroke-width","1px")
+            .attr("d", line );
+ 
+    } //end graphe
+//--
+//-------------------------------------------------------------------------------------
 	function Dashboard() {
 		let v = d3.select("#value_select").property('value');
 		var d = new Date(AllData[1].values[1].timestamp).toLocaleDateString("fr-FR")
@@ -513,7 +545,7 @@ graph.append('g').append("text")
         urlTime = '&from='+encodeURIComponent(from.toISOString())+'&to='+encodeURIComponent(to.toISOString());
 //        console.log(urlTime);
     }
-//---------------------------------------------------------
+//--------------------------------------------------------------------------------------
 // -- Get Data from Optimistik
 //
 	function start(urldata,cumul=0) {   //0-variable 1-cumul 2-diviseur 3//all ?
@@ -577,7 +609,7 @@ graph.append('g').append("text")
 		})
 		.catch(err => {
 		// Do something for an error here
-            infoG.select('text').text("ERREUR récupération des data !");
+            infoG.select('text').text("ERREUR de récupération des data !");
             infoG.select('circle').attr('fill','black');
             dataOK=false;
 			console.log('error');
@@ -906,7 +938,7 @@ function param() {
         .append('g').attr('transform',(d,i)=>{return ('translate('+(2)+','+(i*size+padding/2)+')');});
     for (let t in tab) {
         const xRect = tab.reduce((a,c,i)=>{return (i<t)?(a+c):a;},0);
-        paramG.append('rect').attr('x',xRect)//.attr('y',10)
+        paramG.append('rect').attr('x',xRect).attr('id','stat')
             .attr('width',tab[t]-padding).attr('height',size*0.9).style('fill','#caeeb0');
         paramG.append('text').attr('x',xRect) //.attr('y',10)
             .attr('dx',padding*3).attr('y',size/2+padding).style('fill','#275')
@@ -1007,10 +1039,13 @@ function credClick() {
     val = d3.select('#password').property('value');
     if (val!='') password=val;
     code =btoa(username+':'+password);
-	if (username!='' && password != '') {
-		infoG.select('text').text(code);
+	if (username!='Username' && password != 'Password') {
+		infoG.select('text').text(code+'=> OK');
 		infoG.select('circle').attr('fill','blue');
-	}
+	} else {
+        infoG.select('text').text('saisir User/Password');
+        infoG.select('circle').attr('fill','yellow');
+    }
 //	d3.select('#connexion').style('background',"yellow");
 //	console.log(code);
     return false;

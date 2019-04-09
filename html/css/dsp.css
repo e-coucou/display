@@ -176,7 +176,7 @@ svg {
   stroke: #191970;
   shape-rendering: crispEdges;
 }
-rectan:hover {
+#stat:hover {
   fill:#FE6F5E;/*#35f;*/
 }
 #twitter {
