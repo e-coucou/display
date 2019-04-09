@@ -131,7 +131,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 1.07</aside>
+  <aside >Avril, 2019<br><br> | v 1.08</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -517,7 +517,7 @@ function graphe(v=0) {
             .y( d=>{ return (unSelect.find((a)=>{return d.timestamp===a;}) == undefined)?z(d.value):z(yMinR);})
             .curve(d3.curveLinear);
 
-    d3.select('#seconde').selectAll('path').remove();
+    d3.select('#seconde').remove();
 
     graph.append("path")
         .datum(dtb)
@@ -536,6 +536,7 @@ function graphe(v=0) {
 		var t = new Date(AllData[1].values[1].timestamp).toLocaleTimeString("fr-FR") 
 //		infoG.select('text').text(AllData[v].dataReference+" ["+AllData[v].unit+"]");
         graph.selectAll('g').remove();
+		d3.select('#seconde').remove();
         graphe(v);
 	}
     function updateDate() {
@@ -928,6 +929,7 @@ function param() {
         t_nom = [ 'select','nom','unit','min','max','moyenne','stDev'];
     menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
     graph.selectAll('g').remove();
+    d3.select('#seconde').remove();
     // on ajuste le svg
 //    console.log(listeVal.length,size);
     svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+((listeVal.length+1)*size));
@@ -1084,6 +1086,7 @@ function selGraphique() {
     d3.select('#loadjson').style('display','none');
 	graph.selectAll('g').remove();
     svg.selectAll('circle').remove();
+    d3.select('#seconde').remove();
 	if (dataOK) {
         console.log(listeVal);
         dataCompute();
