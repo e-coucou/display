@@ -10,8 +10,8 @@ class Arbre {
 	maxDepth = 11;
 	branches = [];
 
-	constructor(svg,seed) {
-		this.svg = svg;
+	constructor(arbreG,seed) {
+		this.arbreG = arbreG;
 		this.seed = seed;
 //		console.log(this.da,this.dl,this.ar,this.maxDepth);
   }
@@ -52,7 +52,7 @@ class Arbre {
 	regenerate(initialise=true) {
 		this.branches = [];
 		this.branch(this.seed);
-		initialise ? this.create(this.svg) : this.update(this.svg);
+		initialise ? this.create(this.arbreG) : this.update(this.arbreG);
 	}
 	endPt(b) {
 	// Return endpoint of branch
@@ -76,7 +76,7 @@ class Arbre {
 
 	create() {
 		var md = this.maxDepth;
-		svg.selectAll('line')
+		arbreG.selectAll('line')
 			.data(this.branches)
 			.enter()
 			.append('line')
@@ -91,7 +91,7 @@ class Arbre {
 //		.on('mouseout', highlightParents);
 	}
 	update() {
-		svg.selectAll('line')
+		arbreG.selectAll('line')
 			.data(this.branches)
 			.transition()
 			.attr('x1', d=>this.x1(d))
