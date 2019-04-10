@@ -35,12 +35,12 @@ select#value_select {
 }
 #intervalle {
     position: absolute;
-    top: 25px;
-    right: 20px;
+    top: 12px;
+    right: 30px;
 }
 #info {
     position: absolute;
-    top: 2px;
+    bottom: 5px;
     right: 20px;
 }
 #menu {
@@ -131,7 +131,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 1.09</aside>
+  <aside >Avril, 2019<br><br> | v 1.10</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -148,7 +148,6 @@ input#to {
     <div id="label" class="label">From : <input type="date" id="from" name="trip-from" value="2019-02-15">
     To : <input type="date" id="to" name="trip-from" value="2019-02-28"></div>
     <div id="intervalle"></div>
-    <div id="info"></div>
 <!--    <button id="connectbutton" onclick="start()">Read Data</button>  -->
     <div id="credentials">
     <form name="saisie" onSubmit="return credClick()">
@@ -167,6 +166,7 @@ input#to {
     <div id="chart"></div>
 <footer>
 <aside>(c) e-Coucou | y2kJ | Mars, 2019</aside>
+    <div id="info"></div>
 </footer>
     <script type="text/javascript">
 // Variables Globales
@@ -287,7 +287,7 @@ var infoG = svgInfo.append('g')
         
     infoG.append('circle').attr('fill','#FF8C00')
         .attr('r',5).attr('cx',235);
-    infoG.append('text').attr('fill','black').style('text-anchor','end')
+    infoG.append('text').attr('fill','white').style('text-anchor','end')
         .attr('dx','220px').attr('dy','0.3em').text('informations').raise();
 
 // Menu Header
@@ -654,8 +654,8 @@ function graphe(v=0) {
     //
         svg.append('g').selectAll('circle').data(couleur).enter()
             .append('circle')
-            .attr('cx',(d,i)=>{return i*14+margin.left;})
-            .attr('cy',10).attr('r',5).style('fill',(d)=>{return d;});
+            .attr('cx',(d,i)=>{return i*14+margin.left+(width-14*8);})
+            .attr('cy',0).attr('r',5).style('fill',(d)=>{return d;});
 
 		// structuration des Data
 		var domainByTrait = {},traits=[];
@@ -698,13 +698,14 @@ function graphe(v=0) {
 
 		xAxis.tickSize(size * n);
 		yAxis.tickSize(-size * n);
-		console.log(traits,domainByTrait,n);
+//		console.log(traits,domainByTrait,n);
 //	 intervals de la sélection Brush
-//		console.log(brushsel(traits));
-        svg.append('g').selectAll('text').data(traits).enter()
-            .append('text').attr('id','fourchette')
-            .attr('dx',(d,i)=>{return i*size+margin.left;})
-            .attr('dy',15).style('fill','black').text(d=>d);
+		var brushinfo = brushsel(traits);
+        var brushinfoG = svg.append('g').selectAll('g').data(brushinfo).enter()
+            .append('g').attr('id','fourchette');
+        brushinfoG.append('text')
+            .attr('dx',(d,i)=>{return (n-i-1)*size+margin.left;})
+            .attr('dy',18).style('fill','black').text(d=>d.x);
 
 // les axes ...
     let x_axe = graph.selectAll(".x.axis")
@@ -720,7 +721,7 @@ function graphe(v=0) {
                     .attr("dx", "-.35em")
                     .attr("dy", ".35em")
                     .attr("transform", "translate(0,"+(n*size)+")rotate(-90)")
-                    .style("text-anchor", "end");
+                    .style("text-anchor", "end")
                 ; });
 
     graph.selectAll(".y.axis")
@@ -804,10 +805,18 @@ function graphe(v=0) {
     // If the brush is empty, select all circles.
     function brushend(p) {
         var e = d3.brushSelection(this);
+        let n = traits.length;
 		if (e !== null) {
-			x.domain(domainByTrait[p.x]);
-			console.log(p.i,p.x,x.invert(e[0][0]),x.invert(e[1][0]));
-			d3.select('#fourchette').
+//            brushint(e,brushinfo);
+            x.domain(domainByTrait[p.x]);
+            brushinfo[p.i].min = x.invert(e[0][0]);
+            brushinfo[p.i].max = x.invert(e[1][0]);
+            y.domain(domainByTrait[p.y]);
+            brushinfo[p.j].min = y.invert(e[1][1]);
+            brushinfo[p.j].max = y.invert(e[0][1]);
+//			console.log(p.i,p.x,x.invert(e[0][0]),x.invert(e[1][0]));
+console.log(p,n,traits,brushinfo);
+            brushinfoG.selectAll('text').text(d=>{return '['+valFormat(d.min)+','+valFormat(d.max)+']';});
 		}
         if (e === null) graph.selectAll(".hidden").classed("hidden", false);
     }
@@ -821,6 +830,14 @@ function graphe(v=0) {
         let c = [], n = a.length, i;
         for (i = -1; ++i < n;) c.push({x: a[i], i: i, min:0, max:0});
             return c;
+    }
+    function brushint(e,a) {
+        let n = a.length, i;
+        for (i = -1; ++i < n;) {
+            x.domain(domainByTrait[a[i].x]);
+            a[i].min = x.invert(e[0][0]);
+            a[i].max = x.invert(e[1][0]);
+        }
     }
     function inRange(source, cible, range) {
         return (source < cible + range/2 && source > cible - range/2)?1:0;
@@ -1102,6 +1119,7 @@ function selGraphique() {
 	graph.selectAll('g').remove();
     svg.selectAll('circle').remove();
     d3.select('#seconde').remove();
+    svg.selectAll("#fourchette").remove();
 	if (dataOK) {
         console.log(listeVal);
         dataCompute();
