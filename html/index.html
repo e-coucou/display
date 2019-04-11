@@ -338,8 +338,10 @@ function clickMenu(d,i) {
   var tip = d3.tip()
 	.attr('class', 'd3-tip')
 	.offset([-40, 0])
-	.html(function(d,i) {
+	.html(function(d,i,o) {
         let ref=AllData[indexRef].values.find(a=>{ return (a.timestamp==d.timestamp)?a:'';}).value;
+//            ref2=listeVal.find(a=>{ return (a.nom==d.timestamp)?a:'';}).value;
+        console.log(d,i,o);
 		return "<strong>Valeur :</strong> <span style='color:yellow'>" + valFormat(d.value) + "</span><br>"+toDate(d.timestamp)+"</span><br><span style='color:white'>"+ valFormat(ref)+"</span>"; })
 
 	let graph=svg.append('g').attr('id','graphe')
