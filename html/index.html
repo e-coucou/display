@@ -131,7 +131,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 1.13</aside>
+  <aside >Avril, 2019<br><br> | v 1.20</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -139,6 +139,7 @@ input#to {
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.9.1/d3-tip.js" charset="utf-8"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.0.12/js/all.js" integrity="sha384-Voup2lBiiyZYkRto2XWqbzxHXwzcm4A5RfdfG6466bu5LqjwwrjXCMBQBLMWh7qR" crossorigin="anonymous"></script><body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+    <script scr="https://cdnjs.cloudflare.com/ajax/libs/numjs/0.16.0/numjs.js"></script>
     <script type="text/javascript" src="../js/arbre.js"></script>
 <h1>-</h1>
 <!--	<h1>Dashboard Display 4.0</h1> -->
@@ -171,7 +172,7 @@ input#to {
     <script type="text/javascript">
 // Variables Globales
     var dataOK=false;
-	var AllData=[],CumulData=[], DivData=[];
+	var AllData=[],CumulData=[], DivData=[],NormData=[];
 	var indexCumul=0, indexQuotient=0; indexRef = 0;
 	var username = "Username"
 	var password = "Password"
@@ -340,8 +341,6 @@ function clickMenu(d,i) {
 	.offset([-40, 0])
 	.html(function(d,i,o) {
         let ref=AllData[indexRef].values.find(a=>{ return (a.timestamp==d.timestamp)?a:'';}).value;
-//            ref2=listeVal.find(a=>{ return (a.nom==d.timestamp)?a:'';}).value;
-        console.log(d,i,o);
 		return "<strong>Valeur :</strong> <span style='color:yellow'>" + valFormat(d.value) + "</span><br>"+toDate(d.timestamp)+"</span><br><span style='color:white'>"+ valFormat(ref)+"</span>"; })
 
 	let graph=svg.append('g').attr('id','graphe')
@@ -355,7 +354,7 @@ function clickMenu(d,i) {
 //
 // END 
 //
-//-----------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
 // FONCTIONS ----
 //	
 function click(d,i) {
@@ -673,7 +672,7 @@ function graphe(v=0) {
         let average = (array) => array.reduce((a, b) => { return a + b; }) / array.length;
         let moyenne = average(val);
         val.forEach((a)=>carre.push( (a-moyenne)*(a-moyenne) ));
-        let stDev = Math.sqrt(average(carre));
+        let stDev = (Math.sqrt(average(carre)*(val.length/(val.length-1))));
         let indexCouleur = [];
         let code = (a) => inRange(a,moyenne-3*stDev,stDev)
                          +inRange(a,moyenne-2*stDev,stDev)*2
@@ -767,21 +766,29 @@ function graphe(v=0) {
 
       cell.append("rect")
         .attr("class", "frame")
-        .attr("x", padding / 2)
-        .attr("y", padding / 2)
-        .style("pointer-events", "none")
-        .attr("width", size - padding)
-        .attr("height", size - padding);
-      var circles = cell.selectAll("circle")
-        .data(AllData[indexRef].values)
-        .enter().append("circle")
-        .attr("cx", function(d,i) { return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)?x(AllData[p.i].values[i].value):0; })   //xx +1
-        .attr("cy", function(d,i) { return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)?y(AllData[p.j].values[i].value):0; })   //xx +1
-        .attr("r", 3)
-        .style("fill", function(d,i) {
-            return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)? indexCouleur[i]:'white';});
-      circles.on('mousedown', function () {
-        });
+            .attr("x", padding / 2)
+            .attr("y", padding / 2)
+            .style("pointer-events", "none")
+            .attr("width", size - padding)
+            .attr("height", size - padding);
+
+      if (p.i!=p.j) {
+
+        var circles = cell.selectAll("circle")
+            .data(AllData[indexRef].values)
+            .enter().append("circle")
+            .attr("cx", function(d,i) { return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)?x(AllData[p.i].values[i].value):0; })   //xx +1
+            .attr("cy", function(d,i) { return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)?y(AllData[p.j].values[i].value):0; })   //xx +1
+            .attr("r", 3)
+            .style("fill", function(d,i) {
+                return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)? indexCouleur[i]:'white';});
+        circles.on('mousedown', function () {
+                });
+        } else {
+        var histo = cell.selectAll('rect')
+            .data(AllData[indexRef].values)
+            .enter().append('rect');
+        }
     }
 
     var brushCell;
@@ -939,13 +946,189 @@ function dataCompute() {
           if (unSelect.find(b=>{return c.timestamp==b;}) == undefined) val.push(c.value) ;} );
         a['moyenne']=(average(val));
         val.forEach((f)=>carre.push( (f-a.moyenne)*(f-a.moyenne) ));
-        a['stDev'] = (Math.sqrt(average(carre)));
+        a['stDev'] = (Math.sqrt(average(carre)*(val.length/(val.length-1))));
         a['max'] = (Math.max.apply(Math, a.values.map(function(o) { return (unSelect.find(b=>{return o.timestamp==b;}) == undefined)?o.value:-Infinity; })));  //xx  ajouter timestamp select
         a['min'] = (Math.min.apply(Math, a.values.map(function(o) { return (unSelect.find(b=>{return o.timestamp==b;}) == undefined)?o.value:Infinity; })));
         //maxVal(a.values,'value');
 //        val.forEach((a)=>indexCode.push(code(a)));
       }
     });
+}
+//----------------------------------------------
+// calcul des composabtes principales ...
+//
+function acp() {
+    // on norme la matrice ...
+        let val = [],valT = [],ind=-1,result=[];
+    listeVal.forEach((a,i)=>{
+      if(a.select == 2)
+      {
+        val.push([]);ind++;
+        result.push({nom:a.nom});
+        a.values.forEach( (c,j)=> {
+          if (unSelect.find(b=>{return c.timestamp==b;}) == undefined) val[ind].push((c.value-a.moyenne)/a.stDev) ;} );
+        a['normee'] = val[ind];
+      }
+    });
+//        val.forEach((a,i)=> { valT.push([]) ;            val.forEach( b => valT[i].push(a*b)); }); 
+    valT = transpose(val);
+    valT = matrixDot(val,valT);
+//    console.log(valT);
+    let covVal=covalence(val);
+    console.log('covalence :  ',covVal);
+    let corVal = correlation(covVal);
+    console.log('correlation : ',corVal);
+//    let vp = jacobi(valT,val.length,0.000001);
+    let vp = jacobi(corVal,100,corVal.length,0.000001);
+    vp.forEach((a,i)=>result[i]['vp']=a[i,i]);
+    console.log('acp : ',result);
+    console.log('Matrice normee',listeVal);
+}
+
+let average = (array) => array.reduce((a, b) => { return a + b; }) / array.length;
+
+function acp_test() {
+
+test=[[-0.77509889, -0.28335818, -1.88508077 ,-1.09734528 ,-1.56900676, 0.56976043],
+[-0.12016326 ,0.01963869, 1.60580955, 2.0010414, 0.23416142, 0.14597168],
+[-0.92920139, -0.83885242, -0.44217944, 0.25819889, -0.21663062, -0.53209032],
+[-1.12733318, -1.29334771 ,-1.00072189, -1.09734528, -1.11821472, -0.61684807],
+[-0.12841875, 0.67613189, 0.25599862 ,-0.51639778 ,0.19659542, 0.56976043],
+[-0.9209459, -0.13185975 ,-0.20945342 ,0.45184806 ,0.0087654 ,0.14597168],
+[ 0.45221746, -0.28335818 ,0.72145067 ,0.45184806 ,0.60982146 ,-0.36257482],
+[-0.18345536 ,-1.49534562 ,-0.44217944, -0.71004695, -0.51715865, -1.54918332],
+[ 2.84080623 ,2.19111619 ,0.86108628 ,1.22644473 ,1.81193359 ,1.84112668],
+[-1.28143568 ,-1.49534562 ,-1.60580955, -1.87194195, -1.98223281 ,-1.54918332],
+[-0.16969621 ,1.23162613 ,-0.25599862, -0.90369611 ,-0.14149861, 1.41733793],
+[ 0.45772112 ,-0.13185975, 0.53526985 ,1.03279556 ,0.60982146, -0.02354382],
+[ 1.0080872 ,1.53462299 ,1.65235475 ,0.45184806 ,2.18759363, 0.14597168],
+[ 0.99432805 ,0.67613189 ,0.20945342 ,0.64549722 ,0.0087654 ,0.73927593],
+[-0.5219305 ,-0.2328587, -0.11636301 ,-0.12909944 ,0.37691224 ,-1.21015232],
+[ 0.37791804, -0.08136027 ,0.30254383 ,-0.32274861 ,0.12146341, 0.56976043],
+[ 0.95580242 ,0.77713084 ,1.18690271, 1.22644473 ,0.30929343 ,1.24782243],
+[-0.92920139 ,-0.83885242, -1.37308353 ,-1.09734528, -0.9303847 ,-1.54918332]];
+/*test = [[1.,2.,3.],
+        [2.,1.,4.],
+        [3.,4.,1.]]
+ */   // calcul  des stats ...
+ test=transpose(test);
+    let stat=[],test2=[],ind=-1;
+    test.forEach((a)=>{
+        let val = [], carre=[], indexCode = [];
+        a.forEach( (c)=> {
+           val.push(c);})
+        let moyenne=(average(val));
+        val.forEach((f)=>carre.push( (f-moyenne)*(f-moyenne) ));
+        let stDev = (Math.sqrt(average(carre)));
+//        let stDev = (Math.sqrt(average(carre)*(val.length/(val.length-1))));
+        test2.push([]);ind++;
+        val.forEach(b=>test2[ind].push((b-moyenne)/stDev));
+        stat.push({moyenne:moyenne,stDev:stDev});
+    });
+console.log('stat : ',stat,'matrice normée : ',test2);
+result = [{i:'1'},{i:'2'},{i:'3'},{i:'4'},{i:'5'},{i:'6'}];
+    testT = transpose(test);
+    testT = matrixDot(test,testT);
+    let covTest=covalence(test);
+    console.log('covalence :  ',covTest);
+    let corTest = correlation(covTest);
+    console.log('correlation : ',corTest);
+    let vp = jacobi(corTest,100,corTest.length,0.);
+    console.log('vp: ',vp);
+    vp.forEach((a,i)=>result[i]['vp']=a[i,i]);
+    console.log('result : ',result);
+}
+function covalence(A) {
+    return matrixDot(A,transpose(A));
+}
+function normalisation(A){
+    let result=[],moyenne,stDev,ind=-1;
+    A.forEach((a)=>{
+        let val = [], carre=[];
+//        a.forEach( (c)=> {
+//           val.push(c);})
+        moyenne=(average(a));
+        a.forEach((f)=>carre.push( (f-moyenne)*(f-moyenne) ));
+        stDev = (Math.sqrt(average(carre)));
+//        let stDev = (Math.sqrt(average(carre)*(val.length/(val.length-1))));
+        result.push([]);ind++;
+        a.forEach(b=>result[ind].push((b-moyenne)/stDev));
+    });
+    return {moyenne:moyenne,stDev:stDev,data:result};
+}
+function correlation(A) {
+    let result=[],ind=-1;
+    A.forEach((a)=>{
+        let div=a[++ind];
+        result.push([]);
+        a.forEach((f)=>result[ind].push(f/div));
+    });
+    return result;
+}
+function matrixDot(A, B) {
+    var result = new Array(A.length).fill(0).map(row => new Array(B[0].length).fill(0));
+    return result.map((row, i) => {
+        return row.map((val, j) => {
+            return A[i].reduce((sum, elm, k) => sum + (elm*B[k][j]) ,0)
+        })
+    })
+}
+function transpose(A) {
+    return _.unzip(A);
+}
+function jacobi(M,n,dim,limite) {
+    console.log('M initial : ',M);
+    let l;
+    for (l=-1;++l<n;) {
+        let i=0, j=1, seuil=0;
+        for(let x=0; x<dim; x++) {
+            for(let y=0; y<dim;y++) {
+                if (x != y ) {
+                    seuil += M[x][y]*M[x][y];
+                    if (Math.abs(M[x][y]) > Math.abs(M[i][j])) { i=x; j=y;}
+                }
+            }
+        }// end boucle i,j
+//        console.log(seuil);
+        if (seuil <= limite) return M;
+        // on remplace par matrice de Givens
+        let a=((M[j][j]-M[i][i]) / (2.0*M[i][j]) )*1.0;
+//        console.log(i,j,a);
+        if (a>=0) {
+            a= -a + Math.sqrt(a*a+1);} else { a = -a - Math.sqrt(a*a+1);}
+        at=Math.atan(a);
+//        console.log('atan : ',at);
+        let G = Givens(dim, i, j, at);
+        let Gt = transpose(G);
+//        console.log('G,Gr,M : ',G,Gt,M);
+//        console.log(G,Gt);
+        // calcul nouvel Matrice M = GMGt
+        M = matrixDot(G,M);
+        M = matrixDot(M,Gt);
+    } // boucle
+    console.log('result M ; ',M);
+    return M;
+}
+function Givens(n,i,j,at) {
+    let G = zeros(n,n);
+    for (x=-1;++x<n;) {
+        for (y=-1;++y<n;) {
+            if (x==y) { G[x][y] = (x==i || y==j) ? Math.cos(at): 1; }
+            if (x==i && y==j) G[x][y]= -Math.sin(at);
+            if (x==j && y==i) G[x][y]= Math.sin(at);
+        }
+    }
+    return G;
+}
+function zeros(n,m) {
+    let Z=[];
+    for(i=-1;++i<n;) {
+        Z.push([]);
+        for(j=-1;++j<m;) {
+            Z[i].push(0);
+        }
+    }
+    return Z;
 }
 //----------------------------------------------------------------
 // GUASSIENNE
@@ -967,6 +1150,8 @@ function gaussienne() {
         .scale(y)
         .ticks(6);
 
+    if (dataOK) {acp();}
+    else{acp_test();}
 }
 //
 //----------------------------------------------------------------
@@ -1023,7 +1208,7 @@ function param() {
 */
   function selectVal(d,i,n) {
 //    console.log(n);
-    listeVal[i].select = (listeVal[i].select + 1) % 3;
+    listeVal[i].select = (listeVal[i].select + 1) % 4;
 //    sel='#sel'+i;
 //    d3.select(this).attr('class',(d)=>{return ('icon fas fa-'+icon[d.select]);}).style('color','red');
 //    d3.select(sel).attr('class',(d)=>{return ('icon fas fa-'+icon[d.select]);}).style('color','red');
@@ -1161,7 +1346,7 @@ function selGraphique() {
             if (dataOK) matrix();
             break;
           case 2:
-            if (dataOK) gaussienne();
+            gaussienne();
             break;
           case 3:
             param();break;
