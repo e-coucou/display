@@ -131,7 +131,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 1.21</aside>
+  <aside >Avril, 2019<br><br> | v 1.3</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -1174,10 +1174,11 @@ function gaussienne() {
 
 	let Xscale = d3.scaleBand().rangeRound([0,w]),
         Yscale = d3.scaleBand().rangeRound([h,0]),
-        ColorScale = d3.scaleLinear().domain([-1,0,1]).range(['crimson','white','slateblue']);
+        ColorScale = d3.scaleLinear().domain([-1,0,1]).range(['red','white','blue']);
     let Rscale = d3.scaleSqrt().domain([0,1]);
 
 	nbTag = corVal.length;
+    txtSize = 1.3*8/nbTag;
 
 	Xscale.domain(d3.range(nbTag));
 	Yscale.domain(d3.range(nbTag));
@@ -1209,13 +1210,13 @@ function gaussienne() {
     let circles = cells.append('circle')
 		.attr('cx', function(d) {return Xscale(d.x) + 0.5*Xscale.bandwidth(); })
         .attr('cy', function(d) {return Xscale(d.y) + 0.5*Yscale.bandwidth(); })
-        .attr('r', function(d) {return Rscale(Math.abs(d.value)); })
-		.style('fill', function(d) { return ColorScale(d.value); }).attr('visibility',d=>{return (d.x<d.y)?'hidden':'visible';});
+        .attr('r', function(d) {return (d.x===d.y)?1:Rscale(Math.abs(d.value)); })
+		.style('fill', function(d) { return ColorScale(d.value); }).style('opacity',d=>{return (d.x<d.y)?0.2:1.0;});
 
 	let textes = cells.append('text')
 		.attr('dx', function(d) {return Xscale(d.x) + 0.5*Xscale.bandwidth(); })
         .attr('dy', function(d) {return Xscale(d.y) + 0.6*Yscale.bandwidth(); })
-        .text( d=> d.value.toFixed(2)).attr('text-anchor','middle').style('font-size','18px')
+        .text( d=> d.value.toFixed(2)).attr('text-anchor','middle').style('font-size',txtSize+'vw')
 		.style('fill', function(d) { return ColorScale(d.value); }).attr('visibility',d=>{return (d.x>=d.y)?'hidden':'visible';});
 
     corr.selectAll('g.cell')
@@ -1228,16 +1229,16 @@ function gaussienne() {
                 var yPos = parseFloat(d3.select(this).select('rect').attr('y'));
                 corr.append('text')
                     .attr('class','corrlabel')
-					.attr('dx',Xscale(d.x)).attr('dy',h+10)
+//                  .attr('dx',Xscale(d.x)).attr('dy',h+10)
+                    .attr('dx',w/2).attr('dy',h+10).style('font-size',txtSize+'vw')
                     .text(eigen[d.x].nom)
-                    .style({'dominant-baseline': 'middle','text-anchor': 'middle'});
+                    .style('dominant-baseline', 'middle').style('text-anchor', 'middle');
 
                 corr.append('text')
                     .attr('class', 'corrlabel')
-//					.attr('dy',Xscale(d.y)).attr('d0',0)
                     .text(eigen[d.y].nom) //(data.vars[d.row])
-                    .style('text-anchor', 'middle')
-					.attr('transform', 'translate(' + (-10) + ',' + (Xscale(d.y)) + ')rotate(270)');
+                    .style('text-anchor', 'middle').style('font-size',txtSize+'vw')
+					.attr('transform', 'translate(' + (-10) + ',' + (h/2) + ')rotate(270)');
 
 /*                corr.append('rect')
                     .attr('class', 'tooltip')
@@ -1251,12 +1252,13 @@ function gaussienne() {
                 corr.append('text')
                     .attr('class', 'tooltip')
                     .attr('x', Xscale(d.x)+0.5*Xscale.bandwidth()) //xPos + 10)
-                    .attr('y', Xscale(d.y)+0.5*Yscale.bandwidth()) //yPos + 15)
+                    .attr('y', Xscale(d.y)+0.6*Yscale.bandwidth()) //yPos + 15)
                     .style('text-anchor', 'middle')
                     .style('font-family', 'sans-serif')
-                    .style('font-size', '14px')
+                    .style('font-size', txtSize+'2vw')
                     .style('font-weight', 'bold')
                     .style('fill', 'black')
+                    .attr('visibility',(d.x<d.y)?'hidden':'visible')
                     .text(d3.format('.2f')(d.value));
             })
             .on('mouseout', function(d) {
@@ -1268,12 +1270,79 @@ function gaussienne() {
                 //Hide the tooltip
                 d3.selectAll('.tooltip').remove();
             })
-//            .on('click', function(d) {
-//                drawScatter(d.col, d.row);
-//            })
+            .on('click', function(d) {
+                plotScatter(d.x, d.y); })
 			;
-	
+    let scatter = graph.append('g')
+            .attr('id', 'scatterplot')
+            .attr('transform', 'translate(' + (w + 2*margin.left) + ',0)');
 
+    scatter.append('text')
+        .text('Scatter plot')
+        .attr('class', 'plottitle')
+        .attr('x', w/2).attr('y', -margin.top/2)
+        .style('dominant-baseline', 'middle').style('text-anchor', 'middle');
+
+    var plotScatter = function(x, y) {
+//            console.log('column ' + x + ', row ' + y+', nom '+eigen[x].nom);
+        let Xval=[];
+        listeVal.find(a=>{ return a.nom==eigen[x].nom;}).values.forEach(b=>Xval.push(b.value));
+        let Yval=[];
+        listeVal.find(a=>{ return a.nom==eigen[y].nom;}).values.forEach(b=>Yval.push(b.value));
+
+        d3.selectAll('.points').remove();
+        d3.selectAll('.axis').remove();
+        d3.selectAll('.scatterlabel').remove();
+
+        let xScale = d3.scaleLinear()
+            .domain(d3.extent(Xval))
+            .range([0, w]);
+        let yScale = d3.scaleLinear()
+            .domain(d3.extent(Yval))
+            .range([h, 0]);
+
+        let xAxis = d3.axisBottom()
+            .scale(xScale)
+            .ticks(5);
+
+        let yAxis = d3.axisLeft()
+            .scale(yScale);
+        scatter.append('g')
+            .attr('class', 'x axis')
+            .attr('transform', 'translate(0,' + h + ')')
+            .call(xAxis);
+
+        scatter.append('g')
+            .attr('class', 'y axis')
+            .call(yAxis);
+
+        scatter.append('g')
+            .attr('class', 'points')
+            .selectAll('empty')
+            .data(d3.range(Xval.length))
+            .enter().append('circle')
+            .attr('class', 'point')
+            .attr('cx',function(d) { return xScale(Xval[d]);})
+            .attr('cy', function(d) { return yScale(Yval[d]);})
+            .attr('r', 4)
+            .style('stroke', 'none')
+            .style('fill', 'blue'); // aajuster avec les couleur xxx
+
+
+        scatter.append('text')
+            .text(eigen[x].nom)
+            .attr('class', 'scatterlabel')
+            .attr('x',w/2).attr('y',h + margin.bottom-10)
+            .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle');
+
+        scatter.append('text')
+            .text(eigen[y].nom)
+            .attr('class', 'scatterlabel')
+//            .attr('x',w/2).attr('y',h + margin.bottom/2)
+            .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
+            .attr('transform', 'translate(' + (-margin.left) + ',' + (h/2) + ')rotate(270)');
+
+    }
 }
 //
 //----------------------------------------------------------------
