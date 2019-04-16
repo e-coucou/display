@@ -131,7 +131,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 1.3</aside>
+  <aside >Avril, 2019<br><br> | v 1.31</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -171,14 +171,15 @@ input#to {
 </footer>
     <script type="text/javascript">
 // Variables Globales
-    var dataOK=false;
-	var AllData=[],CumulData=[], DivData=[],NormData=[];
+    var dataOK=false,credOK=false,tagOK=false, timeStart=0,timeStop=0;
+	var AllData=[],CumulData=[], DivData=[],NormData=[],Tags=[];
 	var indexCumul=0, indexQuotient=0; indexRef = 0;
 	var username = "Username"
 	var password = "Password"
     var code = ""; //prompt("Token : "); //"";
 	var refListe = '', refDiviseur='', refCumul='';
 	var interval = 'P1D'
+	var urlData = 'https://cors-anywhere.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data';
 	var urlBase = 'https://cors-anywhere.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
 	var urlBaseOld = 'https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
     var urlTime = '';
@@ -230,6 +231,7 @@ input#to {
 			];
     var unSelect = [],brushListe=[];
 	var corVal;
+	var dispatch = d3.dispatch('load','change');
     let icon = ['eye-slash','plus','eye','code'];
 	// Chart dimensions.
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
@@ -300,6 +302,7 @@ var data_menu = [
         { n:1, x:-240, m:'th', a:'Mattrix'},
         { n:2, x:-240, m:'chart-line', a:'Courbe'},
         { n:3, x:-240, m:'cogs', a:'Parametre'},
+        { n:4, x:-240, m:'filter', a:'Selection'},
         { n:-1, x:-240, m:'user-secret', a:'credential'}
     ];
 var svgMenu = d3.select("#menu").append("svg")
@@ -350,6 +353,7 @@ function clickMenu(d,i) {
 
     updateListe();
     selGraphique();
+	dispatch.on('load',selGraphique);
 //
 //---
 //
@@ -596,7 +600,8 @@ function graphe(v=0) {
 				DivData = data.slice();
 				divCompute();
 				selGraphe=0;
-				selGraphique();
+				dispatch.call('load');
+//				selGraphique();
 				break;
             case 1:
                 CumulData = data.slice();
@@ -605,7 +610,8 @@ function graphe(v=0) {
 				if (refDiviseur !='') { start(url3,2);    //0-variable 1-cumul 2-diviseur
 				} else { 
 					selGraphe=0;
-	                selGraphique();
+					dispatch.call('load');
+//	                selGraphique();
 				}
 				break;
             case 0:
@@ -624,6 +630,25 @@ function graphe(v=0) {
 			console.log('error');
 		})
 	}
+	
+function getAllTag() {
+		let opt = fetch(urlData, {method: 'GET',headers: new Headers({'Access-Control-Allow-Origin':'*','Accept':'application/json','credentials':'includes','Authorization':'basic '+code})})
+		.then(response => {
+		return response.json();
+		})
+		.then(data => {
+		// JSON Data
+			AllTag = data.slice();
+			tagOK = true;
+            infoG.select('text').text("Tous les tags sont chargés !");
+            infoG.select('circle').attr('fill','green');
+			dispatch.call('load');
+		})
+		.catch(err => {
+		// Do something for an error here
+			console.log('pas de récupération des données');
+		});
+}
 //-----------------------------------------------------------------------------------------------------
 //
 //   SCATTER PLOT MATRIX
@@ -1152,6 +1177,8 @@ function gaussienne() {
     // arbre.regenerate(false); // on verra plus tard !
 
 	graph.selectAll('g').remove();
+	
+	///c amarche pas cette notation ...
 	graph.append('g')
         .attr({
             'transform': 'translate(' + margin.left + ',' + margin.top + ')',
@@ -1160,7 +1187,8 @@ function gaussienne() {
         });
 
     var corr = graph.append('g')
-        .attr('id','correlation');
+        .attr('id','correlation')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
     
 	corr.append('text')
         .text('Matrice de corrélation')
@@ -1429,6 +1457,53 @@ function updateListe() {
     refCumul=encodeURIComponent(cumul);
     refDiviseur=encodeURIComponent(div);
 }
+//----------------------------------------------------------------
+// Sélection des valeurs par recherche aborescence  ...
+//
+function selection() {
+	selGraphe=4;
+    menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
+
+	var w = (width-margin.left-margin.right), h = window.innerHeight - margin.top - margin.bottom; // on test ...
+	// on ajuste le svg
+    svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+(h+margin.top+margin.bottom));
+    // arbre.regenerate(false); // on verra plus tard !
+
+	graph.selectAll('g').remove();
+	var selG = graph.append('g')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+        .attr('width', w).attr('height', h);
+	if (tagOK) {
+		var sel=[];
+		AllTag.forEach((a)=> a.tags.forEach((b)=>{
+		let f = sel.find(c=>c.key == b.key);
+		if (f == undefined) 
+			{sel.push({key:b.key, values:[b.value]});} else 
+			{   g = f.values.find(d=>d == b.value);
+			if ( g == undefined) {
+			f.values.push(b.value);} ; }
+			}));
+		console.log(sel);
+		nbSel = sel.length; let hInt=(h/(nbSel+4));
+		var selTag = selG.selectAll('g').data(sel).enter().append('g')
+			.attr('transform',(d,i)=> { return 'translate(100,'+((i+1)*hInt)+')'});
+		selTag.append('text').text(d=>d.key).attr('dy','0em')
+			.style('text-anchor','end').style('font-size','1.2vw') .style('font-family', 'sans-serif')
+            .style('font-weight', 'bold').style('fill', 'blue')
+			.attr('transform',(d,i)=>{return 'rotate('+(30-(60*i/nbSel))+')'});
+		selTag.append('circle').attr('cx',10).attr('cy',(d,i)=> { return(-5+10*Math.sin((30-(60*i/nbSel))*Math.PI/180));})
+			.attr('r',5).style('stroke','blue').style('fill','white')
+			.on('click',selectValue);
+//			.on('mouseover',(d)=>d3.select(this).style('fill','red'));
+	}
+	function selectValue(a,j,v) {
+		let nbVal = a.values.length, hi = h/nbVal;
+		console.log(a.key);
+		var selValue = selG.selectAll('g').data(a.values).enter().append('g')
+			.attr('transform',(d,i)=> { return 'translate(200,'+(i*hi)+')'});
+		selValue.append('text').text(d=>d);
+	}
+}
 //
 //----------------------------------------------------------------
 // CREDENTIALS
@@ -1470,6 +1545,7 @@ function credClick() {
 	if (username!='Username' && password != 'Password') {
 		infoG.select('text').text(code+'=> OK');
 		infoG.select('circle').attr('fill','blue');
+		credOK=true;
 	} else {
         infoG.select('text').text('saisir User/Password');
         infoG.select('circle').attr('fill','yellow');
@@ -1541,8 +1617,12 @@ function selGraphique() {
             break;
           case 3:
             param();break;
+          case 4:
+			if (credOK && !tagOK) getAllTag();
+            selection();break;
           case -1:
-            cred();break;
+            cred();
+			break;
           default:
             console.log('Désole !');
         }
