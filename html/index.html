@@ -179,8 +179,10 @@ input#to {
     var code = ""; //prompt("Token : "); //"";
 	var refListe = '', refDiviseur='', refCumul='';
 	var interval = 'P1D'
-	var urlData = 'https://cors-anywhere.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data';
-	var urlBase = 'https://cors-anywhere.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
+//    var urlData = 'https://cors-anywhere.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data';
+//    var urlBase = 'https://cors-anywhere.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
+    var urlData = 'https://oianalytics-100.optimistik.fr/api/optimistik/data';
+    var urlBase = 'https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
 //    var urlBase ='http://corsproxy.nodester.com/?src=oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
 	var urlBaseOld = 'https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
     var urlTime = '';
@@ -633,7 +635,8 @@ function graphe(v=0) {
 	}
 	
 function getAllTag() {
-		let opt = fetch(urlData, {method: 'GET',headers: new Headers({'Access-Control-Allow-Origin':'*','Accept':'application/json','credentials':'includes','Authorization':'basic '+code})})
+//      let opt = fetch(urlData, {method: 'GET',headers: new Headers({'Access-Control-Allow-Origin':'*','Accept':'application/json','credentials':'includes','withCredentials': 'true','Authorization':'basic '+code})})
+        let opt = fetch(urlData, {method: 'GET',headers: new Headers({'Accept':'application/json','withCredentials': 'true','Authorization':'basic '+code})})
 		.then(response => {
 		return response.json();
 		})
