@@ -638,7 +638,8 @@ function graphe(v=0) {
 	
 function getAllTag() {
 //      let opt = fetch(urlData, {method: 'GET',headers: new Headers({'Access-Control-Allow-Origin':'*','Accept':'application/json','credentials':'includes','withCredentials': 'true','Authorization':'basic '+code})})
-        let opt = fetch(urlData, {method: 'GET',headers: new Headers({'Accept':'application/json','withCredentials': 'true','Authorization':'basic '+code})})
+        let opt = fetch(urlData, {method: 'GET',headers: new Headers({'Accept':'application/json',
+            'guard':'request-no-cors','Access-Control-Allow-Credentials':'true','withCredentials': 'true','Authorization':'basic '+code})})
 		.then(response => {
 		return response.json();
 		})
