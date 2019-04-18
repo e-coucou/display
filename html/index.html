@@ -131,7 +131,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 1.32</aside>
+  <aside >Avril, 2019<br><br> | v 1.33</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -179,10 +179,10 @@ input#to {
     var code = ""; //prompt("Token : "); //"";
 	var refListe = '', refDiviseur='', refCumul='';
 	var interval = 'P1D'
-//    var urlData = 'https://cors-anywhere.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data';
-//    var urlBase = 'https://cors-anywhere.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
-    var urlData = 'https://oianalytics-100.optimistik.fr/api/optimistik/data';
-    var urlBase = 'https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
+    var urlData = 'https://cors-anywhere.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data';
+    var urlBase = 'https://cors-anywhere.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
+//    var urlData = 'https://oianalytics-100.optimistik.fr/api/optimistik/data';
+//    var urlBase = 'https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
 //    var urlBase ='http://corsproxy.nodester.com/?src=oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
 	var urlBaseOld = 'https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
     var urlTime = '';
@@ -651,6 +651,8 @@ function getAllTag() {
 		.catch(err => {
 		// Do something for an error here
 			console.log('pas de récupération des données');
+            infoG.select('text').text("Erreur ");
+            infoG.select('circle').attr('fill','black');
 		});
 }
 //-----------------------------------------------------------------------------------------------------
@@ -1501,6 +1503,7 @@ function selection() {
 //			.on('mouseover',(d)=>d3.select(this).style('fill','red'));
 	}
 	function selectValue(a,j,v) {
+		console.log(a,j,v);
 		let nbVal = a.values.length, hi = h/nbVal;
 		console.log(a.key,hi,nbVal,h,a.values);
 		let selValue = selG.selectAll('g').data(a.values).enter().append('g')
