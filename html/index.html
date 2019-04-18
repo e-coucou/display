@@ -131,7 +131,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 1.33</aside>
+  <aside >Avril, 2019<br><br> | v 1.34</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -190,8 +190,8 @@ input#to {
     var url = '';
 	var QUS_EP = 'RON_QUS_Soude_HCN,RON_QUS_Ammoniaque_HCN,RON_QUS_Azote_HCN,RON_QUS_Azote_HCN,RON_QUS_Gaz_Ferme_HCN,RON_QUS_Gaz_Procédé_HCN,RON_QUS_Vapeur_HCN,RON_QUS_ED_HCN,RON_QUS_Air_HCN,RON_QUS_Vapeur_Produite_HCN';
 	var PUS_EP = 'RON_PUS_Soude_HCN,RON_PUS_Ammoniaque_HCN,RON_PUS_Ammoniaque_HCN,RON_PUS_Azote_HCN,RON_PUS_Gaz_Ferme_HCN,RON_PUS_Gaz_Procédé_HCN,RON_PUS_Vapeur_HCN,RON_PUS_ED_HCN,RON_PUS_Air_HCN,RON_PUS_Vapeur_Produite_HCN';
-    let listeVal = [{nom:'RON_Masse_HCN_Estimation_MMP_Théorique',select:3},
-            {nom:'RON_Cout_Revient_Ammoniaque_HCN_Convertisseurs',select:1},
+    let listeVal = [{nom:'RON_Masse_HCN_Estimation_MMP_Théorique',select:0},
+/*            {nom:'RON_Cout_Revient_Ammoniaque_HCN_Convertisseurs',select:1},
             {nom:'RON_Cout_Revient_Soude_HCN',select:1},
             {nom:'RON_Cout_Revient_Gaz_Procédé_HCN',select:1},
             {nom:'RON_Cout_Revient_Gaz_Ferme_HCN',select:1},
@@ -199,33 +199,33 @@ input#to {
             {nom:'RON_Cout_Revient_ED_HCN',select:1},
             {nom:'RON_Cout_Revient_Azote_HCN',select:1},
             {nom:'RON_Cout_Revient_Air_HCN',select:1},
-            {nom:'RON_Rendement_GN_HCN_Convertisseurs_MMP',select:0},
-            {nom:'RON_Rendement_GN_HCN_K82300',select:0},
+*/            {nom:'RON_Rendement_GN_HCN_Convertisseurs_MMP',select:0},
+            {nom:'RON_Rendement_GN_HCN_K82300',select:1},
             {nom:'RON_Rendement_GN_HCN_K82700',select:0},
             {nom:'RON_Rendement_NH3_HCN_Convertisseurs_MMP',select:0},
             {nom:'RON_Rendement_NH3_HCN_K82300',select:0},
             {nom:'RON_Rendement_NH3_HCN_K82700',select:0},
             {nom:'RON_QUR_Soude_HCN',select:0},{nom:'RON_QUR_Ammoniaque_HCN_Evapo',select:0},{nom:'RON_QUR_Ammoniaque_HCN_Convertisseurs',select:0},{nom:'RON_QUR_Azote_HCN',select:0},{nom:'RON_QUR_Gaz_Ferme_HCN',select:0},{nom:'RON_QUR_Gaz_Procédé_HCN',select:0},{nom:'RON_QUR_Vapeur_HCN',select:0},{nom:'RON_QUR_ED_HCN',select:0},{nom:'RON_QUR_Air_HCN',select:0},
-			{nom:'RON_Ratio_Air_GN_K82300_Indication',select:0},
+			{nom:'RON_Ratio_Air_GN_K82300_Indication',select:2},
 			{nom:'RON_Ratio_Air_GN_K82700_Indication',select:0},
-			{nom:'RON_Ratio_Air_NH3_K82300_Indication',select:0},
+			{nom:'RON_Ratio_Air_NH3_K82300_Indication',select:2},
 			{nom:'RON_Ratio_Air_NH3_K82700_Indication',select:0},
 			{nom:'N-PS82331',select:2},
 			{nom:'N-PXS82363',select:0},
 			{nom:'N-PS82731',select:0},
 			{nom:'N-PXS82763',select:0},
-			{nom:'N-F82102',select:0},
-			{nom:'N-F82502',select:0},
+			{nom:'N-F82102',select:2},
+			{nom:'N-F82502',select:2},
 			{nom:'5A-CH4-GAZ',select:0},
-			{nom:'N-TYS82302',select:2},
-			{nom:'N-TYS82303',select:2},
+			{nom:'N-TYS82302',select:0},
+			{nom:'N-TYS82303',select:0},
 			{nom:'N-TYS82304',select:2},
 			{nom:'N-US82311',select:0},
 			{nom:'N-TS82301',select:0},
 			{nom:'N-T82305-1',select:0},
 			{nom:'N-TC82308',select:0},
-			{nom:'N-TYS82702',select:2},
-			{nom:'N-TYS82703',select:2},
+			{nom:'N-TYS82702',select:0},
+			{nom:'N-TYS82703',select:0},
 			{nom:'N-TYS82704',select:2},
 			{nom:'N-US82711',select:0},
 			{nom:'N-TS82701',select:0},
@@ -582,7 +582,8 @@ function graphe(v=0) {
             infoG.select('circle').attr('fill','red');
 			break;
         }
-		var opt = fetch(urldata, {method: 'GET',headers: new Headers({'Access-Control-Allow-Origin':'*','Accept':'application/json','credentials':'includes','Authorization':'basic '+code})}).then(response => {
+		var opt = fetch(urldata, {method: 'GET',headers: new Headers({'Access-Control-Allow-Origin':'*','Accept':'application/json',
+		'mode':'no-cors','credentials':'includes','Authorization':'basic '+code})}).then(response => {
 		return response.json();
 		})
 		.then(data => {
@@ -667,7 +668,9 @@ function getAllTag() {
 		selGraphe=1;
 		menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
         nbTag = AllData.length - 1;
-		let size = Math.round(width / nbTag), padding =10;
+//xxxx		let size = Math.round(width / nbTag), padding =10;
+		let size = Math.round((window.innerHeight-marging.top-margin.bottom) / nbTag), padding =10;
+		
 
 		var x = d3.scaleLinear()
 			.range([padding / 2, size - padding / 2]);
