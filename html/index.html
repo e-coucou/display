@@ -131,7 +131,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 1.40</aside>
+  <aside >Avril, 2019<br><br> | v 1.41</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -1486,16 +1486,17 @@ function selection() {
     menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
 
 	var w = (width-margin.left-margin.right), h = window.innerHeight - margin.top - margin.bottom; // on test ...
+    var filtre=[],filtreTag='';
 	// on ajuste le svg
     svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+(h+margin.top+margin.bottom));
     // arbre.regenerate(false); // on verra plus tard !
 
 	graph.selectAll('g').remove();
-	var selG = graph.append('g')
+    let selG = graph.append('g')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
         .attr('width', w).attr('height', h);
+    let sel=[];
 	if (tagOK) {
-		var sel=[];
 		AllTag.forEach((a)=> a.tags.forEach((b)=>{
 		let f = sel.find(c=>c.key == b.key);
 		if (f == undefined) 
@@ -1507,24 +1508,38 @@ function selection() {
 		console.log(sel);
 		nbSel = sel.length; let hInt=(h/(nbSel+4));
 		var selTag = selG.selectAll('g').data(sel).enter().append('g')
-			.attr('transform',(d,i)=> { return 'translate(100,'+((i+1)*hInt)+')'})
-            .on('click',selectValue);
-		selTag.append('text').text(d=>d.key).attr('dy','0em')
+			.attr('transform',(d,i)=> { return 'translate(100,'+((i+1)*hInt)+')'});
+		selTag.append('text').text(d=>(d.key+' ('+d.values.length+')')).attr('dy','0em')
 			.style('text-anchor','end').style('font-size','1.2vw') .style('font-family', 'sans-serif')
             .style('font-weight', 'bold').style('fill', 'blue')
 			.attr('transform',(d,i)=>{return 'rotate('+(30-(60*i/nbSel))+')'});
 		selTag.append('circle').attr('cx',10).attr('cy',(d,i)=> { return(-5+10*Math.sin((30-(60*i/nbSel))*Math.PI/180));})
-			.attr('r',5).style('stroke','blue').style('fill','white');
-//			.on('mouseover',(d)=>d3.select(this).style('fill','red'));
+			.attr('r',5).style('stroke','blue').style('fill','white')
+            .on('click',selectValue)
+            .on('mouseover',function(d,i){ d3.select(this).style('fill','#FE6F5E');})
+            .on('mouseout',function(d,i){ d3.select(this).style('fill','white');})
 	}
-	function selectValue(a,j,v) {
-		console.log(a,j,v);
-		let nbVal = a.values.length, hi = h/nbVal;
+	function selectValue(a) {
+        console.log(a);
+        filtreTag=a.key;
+        d3.select('#tagListe').remove();
+		let nbVal = a.values.length, hi = Math.min(15,h/nbVal),pad=1;
 		console.log(a.key,hi,nbVal,h,a.values);
-		let selValue = selG.selectAll('g').data(a.values).enter().append('g')
-			.attr('transform',(d,i)=> { console.log(i*hi);return 'translate(200,'+(i*hi)+')'});
-		selValue.append('text').text(d=>d);
+        let selG2 = selG.append('g').attr('id','tagListe');
+		let selectListe = selG2.selectAll('g').data(a.values).enter().append('g')
+          .attr('transform',(d,i)=> {return 'translate(150,'+(i*(hi+pad))+')'})
+        selectListe.append('rect').attr('width',350).attr('height',hi).style('fill','black')
+            .on('mouseover',function(d,i){ d3.select(this).style('fill','#FE6F5E');})
+            .on('mouseout',function(d,i){ d3.select(this).style('fill','black');})
+            .on('click',selectTag);
+		selectListe.append('text').text(d=>d).style('fill','white').attr('dy','1.0em').attr('dx','1em');
 	}
+    function selectTag(a) {
+        filtre.push(filtreTag+'=='+a);
+        infoG.select('text').text(filtre);
+        infoG.select('circle').attr('fill','violet');
+        console.log(AllTag.forEach((f)=>f.tags.find(t=>{return t.key==filtreTag;})));
+    }
 }
 //
 //----------------------------------------------------------------
