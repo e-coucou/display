@@ -131,7 +131,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 1.34</aside>
+  <aside >Avril, 2019<br><br> | v 1.40</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -188,6 +188,7 @@ input#to {
     var urlTime = '';
     var urlRes = '&resolution='+interval;
     var url = '';
+    var indexCouleur = [];
 	var QUS_EP = 'RON_QUS_Soude_HCN,RON_QUS_Ammoniaque_HCN,RON_QUS_Azote_HCN,RON_QUS_Azote_HCN,RON_QUS_Gaz_Ferme_HCN,RON_QUS_Gaz_Procédé_HCN,RON_QUS_Vapeur_HCN,RON_QUS_ED_HCN,RON_QUS_Air_HCN,RON_QUS_Vapeur_Produite_HCN';
 	var PUS_EP = 'RON_PUS_Soude_HCN,RON_PUS_Ammoniaque_HCN,RON_PUS_Ammoniaque_HCN,RON_PUS_Azote_HCN,RON_PUS_Gaz_Ferme_HCN,RON_PUS_Gaz_Procédé_HCN,RON_PUS_Vapeur_HCN,RON_PUS_ED_HCN,RON_PUS_Air_HCN,RON_PUS_Vapeur_Produite_HCN';
     let listeVal = [{nom:'RON_Masse_HCN_Estimation_MMP_Théorique',select:0},
@@ -210,7 +211,7 @@ input#to {
 			{nom:'RON_Ratio_Air_GN_K82700_Indication',select:0},
 			{nom:'RON_Ratio_Air_NH3_K82300_Indication',select:2},
 			{nom:'RON_Ratio_Air_NH3_K82700_Indication',select:0},
-			{nom:'N-PS82331',select:2},
+			{nom:'N-PS82331',select:0},
 			{nom:'N-PXS82363',select:0},
 			{nom:'N-PS82731',select:0},
 			{nom:'N-PXS82763',select:0},
@@ -263,7 +264,7 @@ var svg = d3.select("#chart").append("svg")
     var arbreG = svg.append('g').attr('id','arbre');
     var seed = {i: 0, x: 35, y:(height +margin.top+margin.bottom), a: 0, l: 13, d:1}; // a = angle, l = length, d = depth {i: 0, x: 420, y: 600, a: 0, l: 130, d:0};
     var arbre = new Arbre(arbreG,seed);
-    arbre.regenerate(true);
+//xxx    arbre.regenerate(true);
 
 // Menu Graphique 
 let selGraphe=-1; //credentials
@@ -669,7 +670,7 @@ function getAllTag() {
 		menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
         nbTag = AllData.length - 1;
 //xxxx		let size = Math.round(width / nbTag), padding =10;
-		let size = Math.round((window.innerHeight-marging.top-margin.bottom) / nbTag), padding =10;
+		let size = Math.round((window.innerHeight-margin.top-margin.bottom) / nbTag)-10, padding =10;
 		
 
 		var x = d3.scaleLinear()
@@ -708,7 +709,7 @@ function getAllTag() {
         let moyenne = average(val);
         val.forEach((a)=>carre.push( (a-moyenne)*(a-moyenne) ));
         let stDev = (Math.sqrt(average(carre)*(val.length/(val.length-1))));
-        let indexCouleur = [];
+        indexCouleur = [];
         let code = (a) => inRange(a,moyenne-3*stDev,stDev)
                          +inRange(a,moyenne-2*stDev,stDev)*2
                          +inRange(a,moyenne-stDev,stDev)*3
@@ -736,7 +737,7 @@ function getAllTag() {
         // on ajuste le svg
         svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+((n)*(size+padding)+30))
         seed.y = ((n)*(size+padding));
-        arbre.regenerate(false);
+//xxx        arbre.regenerate(false);
 
 		xAxis.tickSize(size * n);
 		yAxis.tickSize(-size * n);
@@ -1174,15 +1175,15 @@ function gaussienne() {
 	selGraphe=2;
     menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
     nbTag = AllData.length - 1;
-    let size = Math.round(width / nbTag), padding =10;
+    let size = Math.round(width / nbTag), padding =30;
 
 	var eigen;
     if (dataOK) {eigen = acp();} // on calcul réel 
     else {eigen = acp_test();} // sinon mise au point à partir de données test
 	
-	var w = (width/2)-margin.left-5, h = w; // on test ...
+	var w = (width/2)-margin.left-padding-margin.right, h = w; // on test ...
 	// on ajuste le svg
-    svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+(h+margin.top+margin.bottom));
+    svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right+padding)+" "+(h+margin.top+margin.bottom+padding));
     // arbre.regenerate(false); // on verra plus tard !
 
 	graph.selectAll('g').remove();
@@ -1192,7 +1193,7 @@ function gaussienne() {
         .attr({
             'transform': 'translate(' + margin.left + ',' + margin.top + ')',
             'width': w,
-            'height': h
+            'height': h //xxx a ajuster
         });
 
     var corr = graph.append('g')
@@ -1312,7 +1313,7 @@ function gaussienne() {
 			;
     let scatter = graph.append('g')
             .attr('id', 'scatterplot')
-            .attr('transform', 'translate(' + (w + 2*margin.left) + ',0)');
+            .attr('transform', 'translate(' + (w + 2*margin.left+padding) + ',0)');
 
     scatter.append('text')
         .text('Scatter plot')
@@ -1323,9 +1324,15 @@ function gaussienne() {
     var plotScatter = function(x, y) {
 //            console.log('column ' + x + ', row ' + y+', nom '+eigen[x].nom);
         let Xval=[];
-        listeVal.find(a=>{ return a.nom==eigen[x].nom;}).values.forEach(b=>Xval.push(b.value));
+        listeVal.find(a=>{ return a.nom==eigen[x].nom;}).values.forEach
+			(b=> { if (unSelect.find(o=>{return b.timestamp==o;}) === undefined) Xval.push(b.value)});
         let Yval=[];
-        listeVal.find(a=>{ return a.nom==eigen[y].nom;}).values.forEach(b=>Yval.push(b.value));
+        listeVal.find(a=>{ return a.nom==eigen[y].nom;}).values.forEach
+			(b=> { if (unSelect.find(o=>{return b.timestamp==o;}) === undefined) Yval.push(b.value)});
+//		(b=>Yval.push(b.value));
+
+//		yMax = Math.max.apply(Math, AllData[i].values.map(function(o) { 
+//                    return (unSelect.find(a=>{return o.timestamp==a;}) == undefined)? o.value:-Infinity;
 
         d3.selectAll('.points').remove();
         d3.selectAll('.axis').remove();
@@ -1363,18 +1370,22 @@ function gaussienne() {
             .attr('cy', function(d) { return yScale(Yval[d]);})
             .attr('r', 4)
             .style('stroke', 'none')
-            .style('fill', 'blue'); // aajuster avec les couleur xxx
+            .style("fill", function(d,i) {
+                return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)? indexCouleur[i]:'white';});
+//            .style("fill", function(d,i) {
+//                return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)? indexCouleur[i]:'white';});
+//            .style('fill', 'blue'); // aajuster avec les couleur xxx
 
 
         scatter.append('text')
             .text(eigen[x].nom)
-            .attr('class', 'scatterlabel')
+            .attr('class', 'scatterlabel').style('font-size','1.3vw')
             .attr('x',w/2).attr('y',h + margin.bottom-10)
             .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle');
 
         scatter.append('text')
             .text(eigen[y].nom)
-            .attr('class', 'scatterlabel')
+            .attr('class', 'scatterlabel').style('font-size','1.3vw')
 //            .attr('x',w/2).attr('y',h + margin.bottom/2)
             .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
             .attr('transform', 'translate(' + (-margin.left) + ',' + (h/2) + ')rotate(270)');
@@ -1397,7 +1408,7 @@ function param() {
 //    console.log(listeVal.length,size);
     svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+((listeVal.length+1)*size));
     seed.y = ((listeVal.length+1)*size)-20;
-    arbre.regenerate(false);
+//xxx    arbre.regenerate(false);
     
     let paramG = graph.selectAll('g').data(listeVal).enter()
         .append('g').attr('transform',(d,i)=>{return ('translate('+(2)+','+(i*size+padding/2)+')');});
@@ -1522,7 +1533,7 @@ function cred() {
 	selGraphe=-1;
     svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+(height + margin.top + margin.bottom))
     seed.y = height+margin.top+margin.bottom;
-    arbre.regenerate(false);
+//xxx    arbre.regenerate(false);
     menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
     var credential = [
                 {name: 'username', type: 'text', display: 'Username'},
