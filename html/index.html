@@ -48,6 +48,9 @@ select#value_select {
     top: 0px;
     right: 20px;
 }
+rect#menuRect:hover {
+  fill:#FE6F5E;/*#35f;*/
+}
 .axis,
 .frame {
   shape-rendering: crispEdges;
@@ -131,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 1.42</aside>
+  <aside >Avril, 2019<br><br> | v 1.60</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -172,6 +175,7 @@ input#to {
     <script type="text/javascript">
 // Variables Globales
     var dataOK=false,credOK=false,tagOK=false, timeStart=0,timeStop=0;
+    var matWid=true;
 	var AllData=[],CumulData=[], DivData=[],NormData=[],Tags=[];
 	var indexCumul=0, indexQuotient=0; indexRef = 0;
 	var username = "Username"
@@ -193,7 +197,7 @@ input#to {
     var indexCouleur = [];
 	var QUS_EP = 'RON_QUS_Soude_HCN,RON_QUS_Ammoniaque_HCN,RON_QUS_Azote_HCN,RON_QUS_Azote_HCN,RON_QUS_Gaz_Ferme_HCN,RON_QUS_Gaz_Procédé_HCN,RON_QUS_Vapeur_HCN,RON_QUS_ED_HCN,RON_QUS_Air_HCN,RON_QUS_Vapeur_Produite_HCN';
 	var PUS_EP = 'RON_PUS_Soude_HCN,RON_PUS_Ammoniaque_HCN,RON_PUS_Ammoniaque_HCN,RON_PUS_Azote_HCN,RON_PUS_Gaz_Ferme_HCN,RON_PUS_Gaz_Procédé_HCN,RON_PUS_Vapeur_HCN,RON_PUS_ED_HCN,RON_PUS_Air_HCN,RON_PUS_Vapeur_Produite_HCN';
-    let listeVal = [{nom:'RON_Masse_HCN_Estimation_MMP_Théorique',select:0},
+    let listeVal = [{nom:'RON_Masse_HCN_Estimation_MMP_Théorique',select:2},
 /*            {nom:'RON_Cout_Revient_Ammoniaque_HCN_Convertisseurs',select:1},
             {nom:'RON_Cout_Revient_Soude_HCN',select:1},
             {nom:'RON_Cout_Revient_Gaz_Procédé_HCN',select:1},
@@ -202,8 +206,8 @@ input#to {
             {nom:'RON_Cout_Revient_ED_HCN',select:1},
             {nom:'RON_Cout_Revient_Azote_HCN',select:1},
             {nom:'RON_Cout_Revient_Air_HCN',select:1},
-*/            {nom:'RON_Rendement_GN_HCN_Convertisseurs_MMP',select:0},
-            {nom:'RON_Rendement_GN_HCN_K82300',select:1},
+*/            {nom:'RON_Rendement_GN_HCN_Convertisseurs_MMP',select:1},
+            {nom:'RON_Rendement_GN_HCN_K82300',select:0},
             {nom:'RON_Rendement_GN_HCN_K82700',select:0},
             {nom:'RON_Rendement_NH3_HCN_Convertisseurs_MMP',select:0},
             {nom:'RON_Rendement_NH3_HCN_K82300',select:0},
@@ -220,15 +224,15 @@ input#to {
 			{nom:'N-F82102',select:2},
 			{nom:'N-F82502',select:2},
 			{nom:'5A-CH4-GAZ',select:0},
-			{nom:'N-TYS82302',select:0},
-			{nom:'N-TYS82303',select:0},
+			{nom:'N-TYS82302',select:2},
+			{nom:'N-TYS82303',select:2},
 			{nom:'N-TYS82304',select:2},
 			{nom:'N-US82311',select:0},
 			{nom:'N-TS82301',select:0},
 			{nom:'N-T82305-1',select:0},
 			{nom:'N-TC82308',select:0},
-			{nom:'N-TYS82702',select:0},
-			{nom:'N-TYS82703',select:0},
+			{nom:'N-TYS82702',select:2},
+			{nom:'N-TYS82703',select:2},
 			{nom:'N-TYS82704',select:2},
 			{nom:'N-US82711',select:0},
 			{nom:'N-TS82701',select:0},
@@ -317,17 +321,20 @@ var menuG = svgMenu.selectAll('g').data(data_menu).enter()
         .append('g')
         .attr('transform',(d,i)=>{return 'translate('+(i*40+20)+',10)';})
         .on('click',clickMenu);
-
-    menuG.append('circle').style('fill',(d,i)=>(i==selGraphe)?'red':'#FE6FcE')
-        .attr('r',17).attr('cx',(d,i)=>{return 10;}).attr('cy',10);
+var menuCircle=false;
+    menuG.append('rect').style('fill',(d,i)=>(d.n==selGraphe)?'#DC143C':'red').attr('id','menuRect')
+        .attr('r',17).attr('width',38).attr('height',39).attr('x',-8).attr('y',-9);
+    if (menuCircle) {
+        menuG.append('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6FcE')
+            .attr('r',17).attr('cx',(d,i)=>{return 10;}).attr('cy',10);
+    }
 
     menuG.append('svg').attr('width',20)
     .attr('height',20)
     .attr('class',(d)=>{return ('icon fas fa-'+d.m);}).style('color','white');
 
 function clickMenu(d,i) {
-    selGraphe=d.n;
-    menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
+    doGraphe(d.n);
     selGraphique();
 }
 
@@ -389,14 +396,29 @@ function minVal(array) {
 //-  BAR CHART STANDARD
 //-----
 //
+function doGraphe(v) {
+    selGraphe=v;
+    if (menuCircle) {
+        menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'#DC143C':'red');
+    } else {
+        menuG.selectAll('rect').style('fill',(d,i)=>(d.n==selGraphe)?'#DC143C':'red');
+    }
+}
 function graphe(v=0) {
-	selGraphe=0;
-    menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
+	doGraphe(0);
 
 	// on ajuste le viewbox
     svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+(height + margin.top + margin.bottom))
+    //----------------------------------------------
+    //---- Gestion de la palette de couleurs 
+    //
+        svg.append('g').selectAll('circle').data(couleur).enter()
+            .append('circle')
+            .attr('cx',(d,i)=>{return i*14+margin.left+(width-14*8);})
+            .attr('cy',0).attr('r',5).style('fill',(d)=>{return d;});
+
     seed.y = height+margin.top+margin.bottom;
-    arbre.regenerate(false);
+//    arbre.regenerate(false);
     x = d3.scaleBand()
         .domain(AllData[v].values.map(d => toDate(d.timestamp)))
         .range([margin.left, width - margin.right])
@@ -460,10 +482,12 @@ function graphe(v=0) {
     bar.append("rect")
 //      .style("fill", "steelblue")
       .attr('opacity', 1).style("fill", 
-        (d)=> { //console.log(d, unSelect);
+        (d,i)=> { //console.log(d, unSelect);
             return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)?
-                ((brushListe.find(b=>{return d.timestamp==b;}) == undefined)?"steelblue":"red")
-            :"black";})
+                ((brushListe.find(b=>{return d.timestamp==b;}) == undefined)?
+                 indexCouleur[i]
+//                    "steelblue"
+                :"red"):"black";})
       .attr("x", d =>  x(toDate(d.timestamp)))
       .attr("y", d => d.value<0?y(y.domain()[1]):y(d.value)) 
       .attr("height", d =>{ return (d.value<0)?(y(d.value)-y(y.domain()[1])):(Math.abs( y(y.domain()[0]) - y(d.value)));})
@@ -499,16 +523,17 @@ function graphe(v=0) {
                     return (k===i)?'':(Math.round(v/d.value*100.0) + ' %');})
             bar.select('.value').attr('opacity',(a,k)=> { return (k===i ? 1:0);});
         })
-        .on('mouseleave', function (d) {
+        .on('mouseleave', function (d,i) {
             bar.select("#limit").remove();
             bar.select(".difference").remove();
             bar.select('.value').attr('opacity',1);
             d3.select(this)
                 .attr('opacity', 1).style("fill", 
-                    (d)=> { //console.log(d, unSelect);
+                    (d)=> {// console.log(d, i,j);
                     return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)? 
-                        ((brushListe.find(b=>{return d.timestamp==b;}) == undefined)?"steelblue":"red")
-                    :"black";})
+                        ((brushListe.find(b=>{return d.timestamp==b;}) == undefined)?indexCouleur[i]
+                            //"steelblue"
+                        :"red"):"black";})
                 .attr('width', x.bandwidth());
         })
         .on('click',function (d,i) {
@@ -606,6 +631,7 @@ function graphe(v=0) {
             case 2:
 				DivData = data.slice();
 				divCompute();
+                couleurCompute();
 				selGraphe=0;
 				dispatch.call('load');
 //				selGraphique();
@@ -616,6 +642,7 @@ function graphe(v=0) {
                 let url3 = urlBase+refDiviseur+urlTime+urlRes;
 				if (refDiviseur !='') { start(url3,2);    //0-variable 1-cumul 2-diviseur
 				} else { 
+                    couleurCompute();
 					selGraphe=0;
 					dispatch.call('load');
 //	                selGraphique();
@@ -631,10 +658,10 @@ function graphe(v=0) {
 		})
 		.catch(err => {
 		// Do something for an error here
-            infoG.select('text').text("ERREUR de récupération des data !");
+            infoG.select('text').text("ERREUR : "/err);
             infoG.select('circle').attr('fill','black');
             dataOK=false;
-			console.log('error');
+			console.log(err);
 		})
 	}
 	
@@ -656,7 +683,7 @@ function getAllTag() {
 		.catch(err => {
 		// Do something for an error here
 			console.log('pas de récupération des données');
-            infoG.select('text').text("Erreur ");
+            infoG.select('text').text("Erreur "+err);
             infoG.select('circle').attr('fill','black');
 		});
 }
@@ -669,12 +696,12 @@ function getAllTag() {
     // le tootip !
 
     function matrix() {
-		selGraphe=1;
-		menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
+		doGraphe(1);
         nbTag = AllData.length - 1;
-//xxxx		let size = Math.round(width / nbTag), padding =10;
-		let size = Math.round((window.innerHeight-margin.top-margin.bottom) / nbTag)-10, padding =10;
-		
+        let size = Math.round((window.innerHeight-margin.top-margin.bottom) / nbTag)-10, padding =10;
+        if (matWid) {
+            size = Math.round(width / nbTag);
+        }
 
 		var x = d3.scaleLinear()
 			.range([padding / 2, size - padding / 2]);
@@ -705,24 +732,6 @@ function getAllTag() {
 
 		// structuration des Data
 		var domainByTrait = {},traits=[];
-        let val = [], carre=[];
-        AllData[indexRef].values.forEach(function(a) {
-               if (unSelect.find(b=>{return a.timestamp==b;}) == undefined) val.push(a.value) ;} );
-        let average = (array) => array.reduce((a, b) => { return a + b; }) / array.length;
-        let moyenne = average(val);
-        val.forEach((a)=>carre.push( (a-moyenne)*(a-moyenne) ));
-        let stDev = (Math.sqrt(average(carre)*(val.length/(val.length-1))));
-        indexCouleur = [];
-        let code = (a) => inRange(a,moyenne-3*stDev,stDev)
-                         +inRange(a,moyenne-2*stDev,stDev)*2
-                         +inRange(a,moyenne-stDev,stDev)*3
-                         +inRange(a,moyenne,stDev)*4
-                         +inRange(a,moyenne+stDev,stDev)*5
-                         +inRange(a,moyenne+2*stDev,stDev)*6
-                         +inRange(a,moyenne+3*stDev,stDev)*7;
-        val.forEach((a)=>indexCouleur.push(couleur[code(a)]));
-
-        infoG.select('text').text("Moyenne: ["+valFormat(moyenne)+'] StDev: ['+valFormat(stDev)+']');
 
 		AllData.forEach(function(d,i){ if (i!=indexRef) {   
 			traits.push(d.dataReference);
@@ -903,10 +912,11 @@ function getAllTag() {
 				}
 		}
     }
-    function inRange(source, cible, range) {
+}
+function inRange(source, cible, range) {
         return (source < cible + range/2 && source > cible - range/2)?1:0;
-    }	
-}//-- End MATRIX SCATTERPLOT
+}   
+//-- End MATRIX SCATTERPLOT
 //
 //----------------------------------------------------------------
 // Calcul la somme des cumuls
@@ -933,6 +943,25 @@ function cumulCompute() {
     }else{
         dc.values = dataIn.values;
     }
+}
+function couleurCompute() {
+        let val = [], carre=[];
+        AllData[indexRef].values.forEach(function(a) {
+               if (unSelect.find(b=>{return a.timestamp==b;}) == undefined) val.push(a.value) ;} );
+        let average = (array) => array.reduce((a, b) => { return a + b; }) / array.length;
+        let moyenne = average(val);
+        val.forEach((a)=>carre.push( (a-moyenne)*(a-moyenne) ));
+        let stDev = (Math.sqrt(average(carre)*(val.length/(val.length-1))));
+        indexCouleur = [];
+        let code = (a) => inRange(a,moyenne-3*stDev,stDev)
+                         +inRange(a,moyenne-2*stDev,stDev)*2
+                         +inRange(a,moyenne-stDev,stDev)*3
+                         +inRange(a,moyenne,stDev)*4
+                         +inRange(a,moyenne+stDev,stDev)*5
+                         +inRange(a,moyenne+2*stDev,stDev)*6
+                         +inRange(a,moyenne+3*stDev,stDev)*7;
+        val.forEach((a)=>indexCouleur.push(couleur[code(a)]));
+
 }
 //----------------------------------------------------------------
 // Divise la somme des cumuls
@@ -1175,8 +1204,7 @@ function zeros(n,m) {
 // Analyse correlation et plus ...
 //
 function gaussienne() {
-	selGraphe=2;
-    menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
+	doGraphe(2);
     nbTag = AllData.length - 1;
     let size = Math.round(width / nbTag), padding =30;
 
@@ -1188,6 +1216,14 @@ function gaussienne() {
 	// on ajuste le svg
     svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right+padding)+" "+(h+margin.top+margin.bottom+padding));
     // arbre.regenerate(false); // on verra plus tard !
+
+    //----------------------------------------------
+    //---- Gestion de la palette de couleurs 
+    //
+        svg.append('g').selectAll('circle').data(couleur).enter()
+            .append('circle')
+            .attr('cx',(d,i)=>{return i*14+margin.left+(width-14*8);})
+            .attr('cy',0).attr('r',5).style('fill',(d)=>{return d;});
 
 	graph.selectAll('g').remove();
 	
@@ -1201,9 +1237,9 @@ function gaussienne() {
 
     var corr = graph.append('g')
         .attr('id','correlation')
-        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+        .attr('transform', 'translate(' + margin.left + ',0)');
     
-	corr.append('text')
+/*	corr.append('text')
         .text('Matrice de corrélation')
         .attr({
             'class': 'plottitle',
@@ -1212,7 +1248,7 @@ function gaussienne() {
             'dominant-baseline': 'middle',
             'text-anchor': 'middle'
         });
-
+*/
 	let Xscale = d3.scaleBand().rangeRound([0,w]),
         Yscale = d3.scaleBand().rangeRound([h,0]),
         ColorScale = d3.scaleLinear().domain([-1,0,1]).range(['red','white','blue']);
@@ -1271,14 +1307,14 @@ function gaussienne() {
                 corr.append('text')
                     .attr('class','corrlabel')
 //                  .attr('dx',Xscale(d.x)).attr('dy',h+10)
-                    .attr('dx',w/2).attr('dy',h+10).style('font-size',txtSize+'vw')
+                    .attr('dx',w/2).attr('dy',h+10).style('font-size','1.3vw')
                     .text(eigen[d.x].nom)
                     .style('dominant-baseline', 'middle').style('text-anchor', 'middle');
 
                 corr.append('text')
                     .attr('class', 'corrlabel')
                     .text(eigen[d.y].nom) //(data.vars[d.row])
-                    .style('text-anchor', 'middle').style('font-size',txtSize+'vw')
+                    .style('text-anchor', 'middle').style('font-size','1.3vw')
 					.attr('transform', 'translate(' + (-10) + ',' + (h/2) + ')rotate(270)');
 
 /*                corr.append('rect')
@@ -1316,14 +1352,14 @@ function gaussienne() {
 			;
     let scatter = graph.append('g')
             .attr('id', 'scatterplot')
-            .attr('transform', 'translate(' + (w + 2*margin.left+padding) + ',0)');
+            .attr('transform', 'translate(' + (w + 2*(margin.left+padding+margin.right)) + ',0)');
 
-    scatter.append('text')
+/*    scatter.append('text')
         .text('Scatter plot')
         .attr('class', 'plottitle')
         .attr('x', w/2).attr('y', -margin.top/2)
         .style('dominant-baseline', 'middle').style('text-anchor', 'middle');
-
+*/
     var plotScatter = function(x, y) {
 //            console.log('column ' + x + ', row ' + y+', nom '+eigen[x].nom);
         let Xval=[];
@@ -1347,13 +1383,13 @@ function gaussienne() {
         let yScale = d3.scaleLinear()
             .domain(d3.extent(Yval))
             .range([h, 0]);
-
         let xAxis = d3.axisBottom()
             .scale(xScale)
-            .ticks(5);
-
+            .ticks(10)
+            .tickSize(-w);
         let yAxis = d3.axisLeft()
-            .scale(yScale);
+            .scale(yScale)
+            .tickSize(-h);
         scatter.append('g')
             .attr('class', 'x axis')
             .attr('transform', 'translate(0,' + h + ')')
@@ -1375,15 +1411,11 @@ function gaussienne() {
             .style('stroke', 'none')
             .style("fill", function(d,i) {
                 return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)? indexCouleur[i]:'white';});
-//            .style("fill", function(d,i) {
-//                return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)? indexCouleur[i]:'white';});
-//            .style('fill', 'blue'); // aajuster avec les couleur xxx
-
 
         scatter.append('text')
             .text(eigen[x].nom)
             .attr('class', 'scatterlabel').style('font-size','1.3vw')
-            .attr('x',w/2).attr('y',h + margin.bottom-10)
+            .attr('x',w/2).attr('y',h + margin.bottom+margin.top)
             .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle');
 
         scatter.append('text')
@@ -1400,11 +1432,10 @@ function gaussienne() {
 // Parametre
 //
 function param() {
-	selGraphe=3;
+	doGraphe(3);
     const size = 30, padding=2;
     const tab = [ size, width/2.4, 40, 65, 65, 65, 65],
         t_nom = [ 'select','nom','unit','min','max','moyenne','stDev'];
-    menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
     graph.selectAll('g').remove();
     d3.select('#seconde').remove();
     // on ajuste le svg
@@ -1484,18 +1515,17 @@ function updateListe() {
 // Sélection des valeurs par recherche aborescence  ...
 //
 function selection() {
-	selGraphe=4;
-    menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
+	doGraphe(4);
 
 	var w = (width-margin.left-margin.right), h = window.innerHeight - margin.top - margin.bottom; // on test ...
-    var filtre=[],filtreTag='';
+    var filtre=[],filtreTag='',TagFiltre=AllTag.slice;
 	// on ajuste le svg
     svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+(h+margin.top+margin.bottom));
     // arbre.regenerate(false); // on verra plus tard !
 
 	graph.selectAll('g').remove();
     let selG = graph.append('g')
-        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+        .attr('transform', 'translate(' + 0+ ',' + margin.top + ')')
         .attr('width', w).attr('height', h);
     let sel=[];
 	if (tagOK) {
@@ -1509,6 +1539,7 @@ function selection() {
 			}));
 		console.log(sel);
 		nbSel = sel.length; let hInt=(h/(nbSel+4));
+/*
 		var selTag = selG.selectAll('g').data(sel).enter().append('g')
 			.attr('transform',(d,i)=> { return 'translate(100,'+((i+1)*hInt)+')'});
 		selTag.append('text').text(d=>(d.key+' ('+d.values.length+')')).attr('dy','0em')
@@ -1520,7 +1551,16 @@ function selection() {
             .on('click',selectValue)
             .on('mouseover',function(d,i){ d3.select(this).style('fill','#FE6F5E');})
             .on('mouseout',function(d,i){ d3.select(this).style('fill','white');})
-	}
+*/	
+        var selTag = selG.selectAll('g').data(sel).enter().append('g')
+            .attr('transform',(d,i)=> { return 'translate(0,'+(i*hInt)+')'});
+        selTag.append('rect').attr('width',130).attr('height',25).style('fill','#a0a')
+            .on('mouseover',function(d,i){ d3.select(this).style('fill','#FE6F5E');})
+            .on('mouseout',function(d,i){ d3.select(this).style('fill','#a0a');})
+            .on('click',selectValue);
+        selTag.append('text').text(d=>(d.key+' ('+d.values.length+')')).style('fill','white')
+            .attr('dy','1.5em').attr('dx','1em').style('font-size','1.5vh');
+    }
 	function selectValue(a) {
         console.log(a);
         filtreTag=a.key;
@@ -1529,8 +1569,8 @@ function selection() {
 		console.log(a.key,hi,nbVal,h,a.values);
         let selG2 = selG.append('g').attr('id','tagListe');
 		let selectListe = selG2.selectAll('g').data(a.values).enter().append('g')
-          .attr('transform',(d,i)=> {return 'translate(150,'+(i*(hi+pad))+')'})
-        selectListe.append('rect').attr('width',350).attr('height',hi).style('fill','black')
+          .attr('transform',(d,i)=> {return 'translate(140,'+(i*(hi+pad))+')'})
+        selectListe.append('rect').attr('width',250).attr('height',hi).style('fill','black')
             .on('mouseover',function(d,i){ d3.select(this).style('fill','#FE6F5E');})
             .on('mouseout',function(d,i){ d3.select(this).style('fill','black');})
             .on('click',selectTag);
@@ -1540,19 +1580,32 @@ function selection() {
         filtre.push(filtreTag+'=='+a);
         infoG.select('text').text(filtre);
         infoG.select('circle').attr('fill','violet');
-        console.log(AllTag.forEach((f)=>f.tags.find(t=>{return t.key==filtreTag;})));
+//        AllTag.forEach((f)=>console.log(f.tags.find(t=>{return (t.key==filtreTag && t.value==a);})));
+       TagFiltre = AllTag.filter((f)=>{ return (f.tags.find(t=>{return (t.key==filtreTag && t.value==a);}))!= undefined;} ) ;
+       updateFiltre();
     }
+    function updateFiltre() {
+        d3.select('#tagFiltre').remove();
+        let nbVal = TagFiltre.length, hi = Math.min(15,h/nbVal),pad=1;
+        let selGF = selG.append('g').attr('id','tagFiltre');
+        let selectListe = selGF.selectAll('g').data(TagFiltre).enter().append('g')
+          .attr('transform',(d,i)=> {return 'translate(400,'+(i*(hi+pad))+')'})
+        selectListe.append('rect').attr('width',250).attr('height',hi).style('fill','blue')
+            .on('mouseover',function(d,i){ d3.select(this).style('fill','#FE6F5E');})
+            .on('mouseout',function(d,i){ d3.select(this).style('fill','blue');});
+//            .on('click',selectTag);
+        selectListe.append('text').text(d=>d.reference).style('fill','white').attr('dy','1.0em').attr('dx','1em');
+    }    
 }
 //
 //----------------------------------------------------------------
 // CREDENTIALS
 //
 function cred() {
-	selGraphe=-1;
+	doGraphe(-1);
     svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+(height + margin.top + margin.bottom))
     seed.y = height+margin.top+margin.bottom;
 //xxx    arbre.regenerate(false);
-    menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6F5E');
     var credential = [
                 {name: 'username', type: 'text', display: 'Username'},
                 {name: 'password', type: 'text', display: 'Password'},
