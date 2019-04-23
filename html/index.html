@@ -28,14 +28,9 @@ text {
     fill: #191970;
 }
 
-select#value_select {
-    position: absolute;
-    left: 50px;
-    top: 12px;
-}
 #intervalle {
     position: absolute;
-    top: 12px;
+    top: 15px;
     right: 30px;
 }
 #info {
@@ -50,14 +45,11 @@ select#value_select {
 }
 #titre {
     position: absolute;
-    top: 12px;
+    top: 14px;
     left: 0px;
 	font-weight: bold;
 	text-anchor: middle;
     font: 24px "helvetica neue";
-}
-rect#menuRect:hover {
-  fill:#FE6F5E;/*#35f;*/
 }
 .axis,
 .frame {
@@ -116,7 +108,7 @@ div#label {
     font-size: 12px;
     top:0;
     padding: 5px 0px;
-    margin: 28px 0px 0px 50px;
+    margin: 10px 0px 0px 50px;
 }
 input#from,
 input#to {
@@ -142,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 1.72</aside>
+  <aside >Avril, 2019<br><br> | v 1.8b</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -152,13 +144,8 @@ input#to {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/numjs/0.16.0/numjs.js"></script>
     <script type="text/javascript" src="../js/arbre.js"></script>
-<h1>-</h1>
-<!--	<h1>Dashboard Display 4.0</h1> 
-    <select id="value_select" class="styledSelect" display='none'>
-        <optgroup label="Choisissez la variable."></optgroup>
-    </select> -->
-    <div id="label" class="label">From : <input type="date" id="from" name="trip-from" value="2019-04-10"><br>
-    To : <input type="date" id="to" name="trip-from" value="2019-04-23"></div>
+    <div id="label" class="label">début : <input type="date" id="from" name="trip-from" value="2019-04-10"><br>
+    fin : <input type="date" id="to" name="trip-from" value="2019-04-23"></div>
     <div id='titre'></div><div id="intervalle"></div>
 <!--    <button id="connectbutton" onclick="start()">Read Data</button>  -->
     <div id="credentials">
@@ -182,7 +169,8 @@ input#to {
 </footer>
     <script type="text/javascript">
 // Variables Globales
-    var dataOK=false,credOK=false,tagOK=false, timeStart=0,timeStop=0;
+    var timeStart=0,timeStop=0;
+    var config = {credOK: false, tagOK:false, dataOK:false, arcOK:false, arbreOK: false};
 	var from_to = [];
     var matWid=true;
 	var AllData=[],CumulData=[], DivData=[],NormData=[],Tags=[];
@@ -190,7 +178,7 @@ input#to {
 	var username = "Username"
 	var password = "Password"
     var code = ""; //prompt("Token : "); //"";
-	var refListe = '', refDiviseur='', refCumul='';
+	var refListe = '', refDiviseur='', refCumul='', refAll = ''; // refAll => version 2 et+
 	var interval = 'P1D'
     var urlData = 'https://cors-rky.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data';
     var urlBase = 'https://cors-rky.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
@@ -258,7 +246,8 @@ var margin = {top: 20, right: 20, bottom: 30, left: 50},
     height = 550 - margin.top - margin.bottom;
 var couleur = ['grey','green','violet','cyan','blue','orange','yellow','red'];
 // Create the SVG container and set the origin.
-var svg = d3.select("#chart").append("svg")
+var svg = d3.select("#chart").style('top','57px')
+    .append("svg")
 	.attr('class','svg-contenair')
 //	.attr("preserveAspectRatio", "xMinYMin meet")
 	.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+(height + margin.top + margin.bottom))
@@ -279,21 +268,22 @@ var svg = d3.select("#chart").append("svg")
     var arbreG = svg.append('g').attr('id','arbre');
     var seed = {i: 0, x: 35, y:(height +margin.top+margin.bottom), a: 0, l: 13, d:1}; // a = angle, l = length, d = depth {i: 0, x: 420, y: 600, a: 0, l: 130, d:0};
     var arbre = new Arbre(arbreG,seed);
-//xxx    arbre.regenerate(true);
+    if (config.arbreOK)  arbre.regenerate(true);
 
 // Menu Graphique 
 let selGraphe=-1, selCourbe=0; //credentials
 
 // Menu Intervalle
 let selInter=-1;
+const intWidth = 150;
 var svgInt = d3.select("#intervalle").append("svg")
-    .attr('width',200).attr('height',22)
+    .attr('width',intWidth).attr('height',22)
     .attr("position", 1)
     .append("g").raise();
 var IntervalData= [{v:'P1M',t:'m'},{v:'P7D',t:'s'},{v:'P1D',t:'j'},{v:'PT8H',t:'p'}];
 var interG = svgInt.selectAll('g').data(IntervalData).enter()
 	.append('g')
-	.attr('transform',function (d,i){ return ('translate('+ (180-i*25)+','+11+')');})
+	.attr('transform',function (d,i){ return ('translate('+ (intWidth-20-i*25)+','+11+')');})
     .on('click',click);
 		
 	interG.append('circle').attr('fill','#2E2D88')
@@ -318,10 +308,12 @@ var titreG = svgTitre.selectAll('g').data(menuTitre);
 		.on('click',clickTitre);
 titreG.selectAll('rect').remove();
 titreG.selectAll('text').remove();
-var	titreRect = titreG.append('rect').attr('height',32).attr('width',d=>(d.s*(sizeTitre)-2)).style('fill','red');
+var	titreRect = titreG.append('rect').attr('height',32).attr('width',d=>(d.s*(sizeTitre)-2)).style('fill','#FE6F5E')
+        .on('mouseover',function(d) {d3.select(this).style('fill','red');})
+        .on('mouseout',function(d) {d3.select(this).style('fill','#FE6F5E');});
 var	titreTexte = titreG.append('text')
-		.attr('dx',d=>(d.s*(sizeTitre)/2)).attr('dy','1.2em').style('fill','white')
-		.style('font-weight','bold').style('font-size','1.5em')
+		.attr('dx',d=>(d.s*(sizeTitre)/2)).attr('dy','1.5em').style('fill','white')
+		.style('font-size','1.2em')
 		.text(d=>d.n);
 }
 function clickTitre(d) {
@@ -334,8 +326,7 @@ function clickTitre(d) {
 			selCourbe = (selCourbe +1 ) % AllData.length; 
 			break;
 	}
-	graph.selectAll('g').remove();
-	d3.select('#seconde').remove();
+    clearSVG();
 	graphe(selCourbe);
 }
 	aff_Titre();
@@ -347,11 +338,19 @@ var infoG = svgInfo.append('g')
         .attr('transform','translate(0,15)');
         
     infoG.append('circle').attr('fill','white')
-        .attr('r',5).attr('cx',width/2-10);
+        .attr('r',5).attr('cx',width/2-10)
+        .on('click',clickInfo);
     infoG.append('text').attr('fill','white').style('text-anchor','end')
         .attr('dx',width/2-25).attr('dy','0.3em')
         .text('informations').raise();
-
+function clickInfo() {
+    config.arbreOK = !config.arbreOK;
+    if (config.arbreOK) {
+        arbre.regenerate(true);
+    }else{
+        d3.select('#arbre').remove();
+    }
+}
 // Menu Header
 var data_menu = [
         { n:0, x:-240, m:'chart-bar', a:'Bargraphe'},
@@ -368,8 +367,10 @@ var menuG = svgMenu.selectAll('g').data(data_menu).enter()
         .attr('transform',(d,i)=>{return 'translate('+(i*40+20)+',10)';})
         .on('click',clickMenu);
 var menuCircle=false;
-    menuG.append('rect').style('fill',(d,i)=>(d.n==selGraphe)?'#DC143C':'red').attr('id','menuRect')
-        .attr('r',17).attr('width',38).attr('height',39).attr('x',-8).attr('y',-9);
+    menuG.append('rect').style('fill',(d,i)=>(d.n==selGraphe)?'#9C143C':'red').attr('id','menuRect')
+        .attr('r',17).attr('width',38).attr('height',39).attr('x',-8).attr('y',-9)
+        .on('mouseover',function(d) {d3.select(this).style('fill','#FE8F7E')})
+        .on('mouseout',function(d){d3.select(this).style('fill',(d,i)=>(d.n==selGraphe)?'#9C143C':'red')});
     if (menuCircle) {
         menuG.append('circle').style('fill',(d,i)=>(d.n==selGraphe)?'red':'#FE6FcE')
             .attr('r',17).attr('cx',(d,i)=>{return 10;}).attr('cy',10);
@@ -383,16 +384,6 @@ function clickMenu(d,i) {
     doGraphe(d.n);
     selGraphique();
 }
-
- //   menuG.append('text').attr('fill','black').style('text-anchor','end')
- //       .attr('dx','220px').attr('dy','0.3em').text('informations').raise();
-/* var temp = svg.append("text")
-    .attr("class", "temp label")
-    .attr("text-anchor", "begin")
-    .attr("y", 0)
-    .attr("x", 0)
-    .text('Appuyez sur <Read Data>');
-*/
 //    d3.select("#value_select").on("change", Dashboard);
     d3.select("#from").on("change", updateDate);
     d3.select("#to").on("change", updateDate);
@@ -408,7 +399,6 @@ function clickMenu(d,i) {
 
 	let graph=svg.append('g').attr('id','graphe')
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
 
     updateListe();
     selGraphique();
@@ -445,9 +435,9 @@ function minVal(array) {
 function doGraphe(v) {
     selGraphe=v;
     if (menuCircle) {
-        menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'#DC143C':'red');
+        menuG.selectAll('circle').style('fill',(d,i)=>(d.n==selGraphe)?'#9C143C':'red');
     } else {
-        menuG.selectAll('rect').style('fill',(d,i)=>(d.n==selGraphe)?'#DC143C':'red');
+        menuG.selectAll('rect').style('fill',(d,i)=>(d.n==selGraphe)?'#9C143C':'red');
     }
 }
 function graphe(v=0) {
@@ -465,10 +455,16 @@ function graphe(v=0) {
         svg.append('g').selectAll('circle').data(couleur).enter()
             .append('circle')
             .attr('cx',(d,i)=>{return i*14+margin.left+(width-14*8);})
-            .attr('cy',0).attr('r',5).style('fill',(d)=>{return d;});
+            .attr('cy',0).attr('r',5).style('fill',(d)=>{return d;})
+            .on('click',clickCouleur);
+    function clickCouleur() {
+        config.arcOK = !config.arcOK;
+        clearSVG();
+        graphe(selCourbe);
+    }
 
     seed.y = height+margin.top+margin.bottom;
-//    arbre.regenerate(false);
+    if (config.arbreOK)  arbre.regenerate(false);
     x = d3.scaleBand()
         .domain(AllData[v].values.map(d => toDate(d.timestamp)))
         .range([margin.left, width - margin.right])
@@ -535,8 +531,7 @@ function graphe(v=0) {
         (d,i)=> { //console.log(d, unSelect);
             return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)?
                 ((brushListe.find(b=>{return d.timestamp==b;}) == undefined)?
-                 indexCouleur[i]
-//                    "steelblue"
+                 config.arcOK?indexCouleur[i]:"steelblue"
                 :"red"):"black";})
       .attr("x", d =>  x(toDate(d.timestamp)))
       .attr("y", d => d.value<0?y(y.domain()[1]):y(d.value)) 
@@ -581,8 +576,8 @@ function graphe(v=0) {
                 .attr('opacity', 1).style("fill", 
                     (d)=> {// console.log(d, i,j);
                     return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)? 
-                        ((brushListe.find(b=>{return d.timestamp==b;}) == undefined)?indexCouleur[i]
-                            //"steelblue"
+                        ((brushListe.find(b=>{return d.timestamp==b;}) == undefined)?
+                 config.arcOK?indexCouleur[i]:"steelblue"
                         :"red"):"black";})
                 .attr('width', x.bandwidth());
         })
@@ -682,7 +677,7 @@ function graphe(v=0) {
 			});
 		    infoG.select('text').text("Données disponibles !");
             infoG.select('circle').attr('fill','#03C03C');
-            dataOK=true;
+            config.dataOK=true;
 			switch(cumul) {
             case 2:
 				DivData = data.slice();
@@ -714,13 +709,29 @@ function graphe(v=0) {
 		})
 		.catch(err => {
 		// Do something for an error here
-            infoG.select('text').text("ERREUR : "/err);
+            infoG.select('text').text("ERREUR : "+err);
             infoG.select('circle').attr('fill','black');
-            dataOK=false;
+            config.dataOK=false;
 			console.log(err);
 		})
 	}
 	
+function getAllData(urlData) {
+    var opt = fetch(urldata, {method: 'GET',headers: new Headers({'Access-Control-Allow-Origin':'*','Accept':'application/json',
+        'mode':'no-cors','credentials':'includes','Authorization':'basic '+code})}).then(response => {
+        return response.json();
+        })
+    .then(data => {
+        // JSON Data
+            console.log(data);
+        })
+    .catch(err => {
+        infoG.select('text').text("ERREUR : "+err);
+        infoG.select('circle').attr('fill','black');
+        config.dataOK=false;
+      console.log(err);
+    })   
+}
 function getAllTag() {
 //      let opt = fetch(urlData, {method: 'GET',headers: new Headers({'Access-Control-Allow-Origin':'*','Accept':'application/json','credentials':'includes','withCredentials': 'true','Authorization':'basic '+code})})
         let opt = fetch(urlData, {method: 'GET',headers: new Headers({'Accept':'application/json',
@@ -731,7 +742,7 @@ function getAllTag() {
 		.then(data => {
 		// JSON Data
 			AllTag = data.slice();
-			tagOK = true;
+			config.tagOK = true;
             infoG.select('text').text("Tous les tags sont chargés !");
             infoG.select('circle').attr('fill','green');
 			dispatch.call('load');
@@ -806,7 +817,7 @@ function getAllTag() {
         // on ajuste le svg
         svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+((n)*(size+padding)+30))
         seed.y = ((n)*(size+padding));
-//xxx        arbre.regenerate(false);
+        if (config.arbreOK)  arbre.regenerate(false);
 
 		xAxis.tickSize(size * n);
 		yAxis.tickSize(-size * n);
@@ -1011,7 +1022,7 @@ function cumulCompute() {
         ;})
 		; });
 
-    dataOK=true;
+    config.dataOK=true;
     AllData.push(dataIn);
 	indexCumul = AllData.length - 1;
 	indexRef = indexCumul;
@@ -1304,13 +1315,14 @@ function gaussienne() {
     let size = Math.round(width / nbTag), padding =30;
 
 	var eigen;
-    if (dataOK) {eigen = acp();} // on calcul réel 
+    if (config.dataOK) {eigen = acp();} // on calcul réel 
     else {eigen = acp_test();} // sinon mise au point à partir de données test
 	
 	var w = (width/2)-margin.left-padding-margin.right, h = w; // on test ...
 	// on ajuste le svg
     svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right+padding)+" "+(h+margin.top+margin.bottom+padding));
-    // arbre.regenerate(false); // on verra plus tard !
+    seed.y = h+margin.top+margin.bottom;
+    if (config.arbreOK)  arbre.regenerate(false);
 
     //----------------------------------------------
     //---- Gestion de la palette de couleurs 
@@ -1537,7 +1549,7 @@ function param() {
 //    console.log(listeVal.length,size);
     svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+((listeVal.length+1)*size));
     seed.y = ((listeVal.length+1)*size)-20;
-//xxx    arbre.regenerate(false);
+    if (config.arbreOK)  arbre.regenerate(false);
     
     let paramG = graph.selectAll('g').data(listeVal).enter()
         .append('g').attr('transform',(d,i)=>{return ('translate('+(2)+','+(i*size+padding/2)+')');});
@@ -1589,22 +1601,26 @@ function param() {
     button.select('rect').attr('fill','green');
     button.select('text').style('fill','white');
   }
+  /*
   function loadCumul(d,i,n) {
     let url2 = urlBase+refCumul+urlTime+urlRes;
     start(url2,1);
     buttonCumul.select('rect').attr('fill','green');
     buttonCumul.select('text').style('fill','white');    
-  }
+  }*/
 }
+
 function updateListe() {
-    let red = '',cumul='', div ='';
+    let red = '',cumul='', div ='',all ='';
     listeVal.forEach((a)=>{ 
+        if (a.select!=0) (all += (all==''?'':',')+a.nom);
         if (a.select==3) (div += (div==''?'':',')+a.nom);
         if (a.select==2) (red += (red==''?'':',')+a.nom);
         if (a.select==1) (cumul += (cumul==''?'':',')+a.nom);  });
     refListe=encodeURIComponent(red);
     refCumul=encodeURIComponent(cumul);
     refDiviseur=encodeURIComponent(div);
+    refAll=encodeURIComponent(div);
 }
 //----------------------------------------------------------------
 // Sélection des valeurs par recherche aborescence  ...
@@ -1616,14 +1632,14 @@ function selection() {
     var filtre=[],filtreTag='',TagFiltre=AllTag.slice;
 	// on ajuste le svg
     svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+(h+margin.top+margin.bottom));
-    // arbre.regenerate(false); // on verra plus tard !
+    if (config.arbreOK)  arbre.regenerate(false);
 
 	graph.selectAll('g').remove();
     let selG = graph.append('g')
         .attr('transform', 'translate(' + 0+ ',' + margin.top + ')')
         .attr('width', w).attr('height', h);
     let sel=[];
-	if (tagOK) {
+	if (config.tagOK) {
 		AllTag.forEach((a)=> a.tags.forEach((b)=>{
 		let f = sel.find(c=>c.key == b.key);
 		if (f == undefined) 
@@ -1700,7 +1716,7 @@ function cred() {
 	doGraphe(-1);
     svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+(height + margin.top + margin.bottom))
     seed.y = height+margin.top+margin.bottom;
-//xxx    arbre.regenerate(false);
+    if (config.arbreOK)  arbre.regenerate(false);
     var credential = [
                 {name: 'username', type: 'text', display: 'Username'},
                 {name: 'password', type: 'text', display: 'Password'},
@@ -1732,7 +1748,7 @@ function credClick() {
 	if (username!='Username' && password != 'Password') {
 		infoG.select('text').text(code+'=> OK');
 		infoG.select('circle').attr('fill','blue');
-		credOK=true;
+		config.credOK=true;
 	} else {
         infoG.select('text').text('saisir User/Password');
         infoG.select('circle').attr('fill','yellow');
@@ -1764,26 +1780,31 @@ function load_d3(fileHandler) {
     listeVal=[];
     listeVal=json;
     unSelect=[];
-    dataOK=false;
+    config.dataOK=false;
     infoG.select('text').text("Chargement fichier");
     infoG.select('circle').attr('fill','#d49');
     });
 }
 //----------------------------------------------------------------
-function selGraphique() {
-	d3.select('#credentials').style('display','none');
+//
+function clearSVG() {
+    d3.select('#credentials').style('display','none');
     d3.select('#loadjson').style('display','none');
-	graph.selectAll('g').remove();
+    graph.selectAll('g').remove();
     svg.selectAll('circle').remove();
     d3.select('#seconde').remove();
     svg.selectAll("#fourchette").remove();
-	if (dataOK) {
+}
+//
+function selGraphique() {
+    clearSVG();
+	if (config.dataOK) {
         console.log(listeVal);
         dataCompute();
     }
     switch (selGraphe) {
           case 0:
-            if (dataOK) {
+            if (config.dataOK) {
                  //- les select ...
 /*                d3.select("#value_select")
        .selectAll('option').remove();
@@ -1793,11 +1814,11 @@ function selGraphique() {
        .append('option')
        .text(function (d,i) { return d.dataReference; })
        .attr('value',function (d,i) { return i; });*/
-             graphe(indexRef);   
+             graphe(selCourbe);   
             }
             break;
           case 1:
-            if (dataOK) matrix();
+            if (config.dataOK) matrix();
             break;
           case 2:
             gaussienne();
@@ -1805,7 +1826,7 @@ function selGraphique() {
           case 3:
             param();break;
           case 4:
-			if (credOK && !tagOK) getAllTag();
+			if (config.credOK && !config.tagOK) getAllTag();
             selection();break;
           case -1:
             cred();
