@@ -134,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 1.81b</aside>
+  <aside >Avril, 2019<br><br> | v 2.00b</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -420,7 +420,7 @@ function click(d,i) {
     console.log(urlTime);
     url = urlBase+refListe +urlTime+urlRes;
 //    console.log('avant: ',url);
-    start(url,0); //0-variable 1-cumul 2-diviseur
+//xxx    start(url,0); //0-variable 1-cumul 2-diviseur
 	url = urlBase+refAll+urlTime+urlRes;
 	getAllData(url);
 }
@@ -717,9 +717,12 @@ function graphe(v=0) {
 			console.log(err);
 		})
 	}
-	
+//----------------------------------------
+// Nouvelle fonction de récupération des données en une seule requête !
 function getAllData(urldata) {
 	console.log('all tag : ', refAll);
+	infoG.select('text').text("Lectures des données en cours ...");
+	infoG.select('circle').attr('fill','red');
     var opt = fetch(urldata, {method: 'GET',headers: new Headers({'Access-Control-Allow-Origin':'*','Accept':'application/json',
         'mode':'no-cors','credentials':'includes','Authorization':'basic '+code})}).then(response => {
         return response.json();
@@ -727,6 +730,34 @@ function getAllData(urldata) {
     .then(data => {
         // JSON Data
             console.log(data);
+			CumulData=[],DivData=[],AllData=[];
+			listeVal.forEach( (a,i) => {
+				let o = data.find( f => { return (f.dataReference == a.nom);});
+				if (o != undefined) {
+					listeVal[i]['unit']= o.unit;
+					listeVal[i]['values']= o.values;
+				}
+			});
+		    infoG.select('text').text("Données disponibles !");
+            infoG.select('circle').attr('fill','#03C03C');
+            config.dataOK=true;
+			// on reparti les data
+			data.forEach(a=>{
+				let f=listeVal.filter(b=>b.nom==a.dataReference);
+				console.log('data',f);
+				switch (f[0].select) {
+					case 1 : CumulData.push(a);break;
+					case 2 : AllData.push(a);break;
+					case 3 : DivData.push(a);break;
+				}
+			});
+//			console.log('AllData',AllData);	console.log('CumulData',CumulData);	console.log('DivData',DivData);
+            cumulCompute();
+			if (DivData.length >0) divCompute();
+			dataCompute();
+			selGraphe=0;
+			selCourbe=indexRef;
+			dispatch.call('load');
         })
     .catch(err => {
         infoG.select('text').text("ERREUR : "+err);

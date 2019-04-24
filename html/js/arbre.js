@@ -3,17 +3,15 @@
 
 
 class Arbre {
-//	seed = {i: 0, x: 40, y:40, a: 0, l: 10, d:1}; // a = angle, l = length, d = depth {i: 0, x: 420, y: 600, a: 0, l: 130, d:0};
-	da = 0.4; // Angle 50%
-	dl = 0.8; // longueur
-	ar = 0.7; // Alea : 
-	maxDepth = 11;
-	branches = [];
-
 	constructor(arbreG,seed) {
 		this.arbreG = arbreG;
 		this.seed = seed;
 //		console.log(this.da,this.dl,this.ar,this.maxDepth);
+	this.da = 0.4;
+	this.dl = 0.8;
+	this.ar = 0.7; 
+	this.maxDepth = 11;
+	this.branches = [];
   }
 // Tree creation functions
 	branch(b) {
