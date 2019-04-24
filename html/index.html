@@ -1012,7 +1012,7 @@ function cumulCompute() {
 		})});
 	listeVal.forEach(a=>{ try {a.values = a.values.filter(b=> { 
 			return (from_to.find(c=>{ return c==b.timestamp;}) != undefined ); 
-		})} catch {e=0;}});
+		})} catch (err){}});
 	console.log(AllData);
 	//-- filtre ok
     let dataIn ={nom:'Données cumulées',dataReference:'Data Cumulées',unit: '*',values:[]};
