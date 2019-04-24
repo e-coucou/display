@@ -134,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 1.8b</aside>
+  <aside >Avril, 2019<br><br> | v 1.81b</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -421,6 +421,8 @@ function click(d,i) {
     url = urlBase+refListe +urlTime+urlRes;
 //    console.log('avant: ',url);
     start(url,0); //0-variable 1-cumul 2-diviseur
+	url = urlBase+refAll+urlTime+urlRes;
+	getAllData(url);
 }
 function maxVal(array,values) {
 	return Math.max(Math.max.apply(Math, array[values].map(function(o) { return o.value; })),0);
@@ -716,7 +718,8 @@ function graphe(v=0) {
 		})
 	}
 	
-function getAllData(urlData) {
+function getAllData(urldata) {
+	console.log('all tag : ', refAll);
     var opt = fetch(urldata, {method: 'GET',headers: new Headers({'Access-Control-Allow-Origin':'*','Accept':'application/json',
         'mode':'no-cors','credentials':'includes','Authorization':'basic '+code})}).then(response => {
         return response.json();
@@ -1009,7 +1012,7 @@ function cumulCompute() {
 		})});
 	listeVal.forEach(a=>{ try {a.values = a.values.filter(b=> { 
 			return (from_to.find(c=>{ return c==b.timestamp;}) != undefined ); 
-		})} catch {}});
+		})} catch {e=0;}});
 	console.log(AllData);
 	//-- filtre ok
     let dataIn ={nom:'Données cumulées',dataReference:'Data Cumulées',unit: '*',values:[]};
@@ -1120,7 +1123,7 @@ function dataCompute() {
         a['moyenne']=(average(val));
         val.forEach((f)=>carre.push( (f-a.moyenne)*(f-a.moyenne) ));
         a['stDev'] = (Math.sqrt(average(carre)*(val.length/(val.length-1))));
-        a['max'] = (Math.max.apply(Math, a.values.map(function(o) { return (unSelect.find(b=>{return o.timestamp==b;}) == undefined)?o.value:-Infinity; })));  //xx  ajouter timestamp select
+        a['max'] = (Math.max.apply(Math, a.values.map(function(o) { return (unSelect.find(b=>{return o.timestamp==b;}) == undefined)?o.value:-Infinity; })));
         a['min'] = (Math.min.apply(Math, a.values.map(function(o) { return (unSelect.find(b=>{return o.timestamp==b;}) == undefined)?o.value:Infinity; })));
         //maxVal(a.values,'value');
 //        val.forEach((a)=>indexCode.push(code(a)));
@@ -1334,28 +1337,10 @@ function gaussienne() {
 
 	graph.selectAll('g').remove();
 	
-	///c amarche pas cette notation ...
-	graph.append('g')
-        .attr({
-            'transform': 'translate(' + margin.left + ',' + margin.top + ')',
-            'width': w,
-            'height': h //xxx a ajuster
-        });
-
     var corr = graph.append('g')
         .attr('id','correlation')
         .attr('transform', 'translate(' + margin.left + ',0)');
     
-/*	corr.append('text')
-        .text('Matrice de corrélation')
-        .attr({
-            'class': 'plottitle',
-            'x': w/2,
-            'y': -margin.top/2,
-            'dominant-baseline': 'middle',
-            'text-anchor': 'middle'
-        });
-*/
 	let Xscale = d3.scaleBand().rangeRound([0,w]),
         Yscale = d3.scaleBand().rangeRound([h,0]),
         ColorScale = d3.scaleLinear().domain([-1,0,1]).range(['red','white','blue']);
@@ -1468,17 +1453,12 @@ function gaussienne() {
         .style('dominant-baseline', 'middle').style('text-anchor', 'middle');
 */
     var plotScatter = function(x, y) {
-//            console.log('column ' + x + ', row ' + y+', nom '+eigen[x].nom);
         let Xval=[];
         listeVal.find(a=>{ return a.nom==eigen[x].nom;}).values.forEach
 			(b=> { if (unSelect.find(o=>{return b.timestamp==o;}) === undefined) Xval.push(b.value)});
         let Yval=[];
         listeVal.find(a=>{ return a.nom==eigen[y].nom;}).values.forEach
 			(b=> { if (unSelect.find(o=>{return b.timestamp==o;}) === undefined) Yval.push(b.value)});
-//		(b=>Yval.push(b.value));
-
-//		yMax = Math.max.apply(Math, AllData[i].values.map(function(o) { 
-//                    return (unSelect.find(a=>{return o.timestamp==a;}) == undefined)? o.value:-Infinity;
 
         d3.selectAll('.points').remove();
         d3.selectAll('.axis').remove();
@@ -1522,15 +1502,14 @@ function gaussienne() {
         scatter.append('text')
             .text(eigen[x].nom)
             .attr('class', 'scatterlabel').style('font-size','1.3vw')
-            .attr('x',w/2).attr('y',h + margin.bottom+margin.top)
+            .attr('x',w/2).attr('y',h +margin.top)
             .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle');
 
         scatter.append('text')
             .text(eigen[y].nom)
             .attr('class', 'scatterlabel').style('font-size','1.3vw')
-//            .attr('x',w/2).attr('y',h + margin.bottom/2)
             .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
-            .attr('transform', 'translate(' + (-margin.left) + ',' + (h/2) + ')rotate(270)');
+            .attr('transform', 'translate(' + (-2*margin.left) + ',' + (h/2) + ')rotate(270)');
 
     }
 }
@@ -1620,7 +1599,7 @@ function updateListe() {
     refListe=encodeURIComponent(red);
     refCumul=encodeURIComponent(cumul);
     refDiviseur=encodeURIComponent(div);
-    refAll=encodeURIComponent(div);
+    refAll=encodeURIComponent(all);
 }
 //----------------------------------------------------------------
 // Sélection des valeurs par recherche aborescence  ...
