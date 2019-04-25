@@ -134,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 2.02</aside>
+  <aside >Avril, 2019<br><br> | v 2.10a</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -1192,6 +1192,9 @@ function acp() {
     vp.forEach((a,i)=>result[i]['vp']=a[i,i]);
     console.log('acp : ',result);
     console.log('Matrice normee',listeVal);
+	console.log('new Jacobi avec vecteur !');
+	var MJ = corVal.slice();
+    jacobiV2(MJ,0,MJ.length,0);
 	return result;
 }
 
@@ -1217,6 +1220,15 @@ test=[[-0.77509889, -0.28335818, -1.88508077 ,-1.09734528 ,-1.56900676, 0.569760
 [ 0.37791804, -0.08136027 ,0.30254383 ,-0.32274861 ,0.12146341, 0.56976043],
 [ 0.95580242 ,0.77713084 ,1.18690271, 1.22644473 ,0.30929343 ,1.24782243],
 [-0.92920139 ,-0.83885242, -1.37308353 ,-1.09734528, -0.9303847 ,-1.54918332]];
+/*test = [[6,6,5,5.5,8],
+[8,8,8,8,9],
+[6,7,11,9.5,11],
+[14.5,14.5,15.5,15,8],
+[14,14,12,12,10],
+[11,10,5.5,7,13],
+[5.5,7,14,11.5,10],
+[13,12.5,8.5,9.5,12],
+[9,9.5,12.5,12,18]];
 /*test = [[1.,2.,3.],
         [2.,1.,4.],
         [3.,4.,1.]]
@@ -1237,16 +1249,18 @@ test=[[-0.77509889, -0.28335818, -1.88508077 ,-1.09734528 ,-1.56900676, 0.569760
     });
 console.log('stat : ',stat,'matrice normée : ',test2);
 result = [{nom:'cyl'},{nom:'2'},{nom:'3'},{nom:'4'},{nom:'5'},{nom:'6'}];
-    testT = transpose(test);
+    testT = transpose(test); // mettre test2 si pas normée
     testT = matrixDot(test,testT);
     let covTest=covalence(test);
     console.log('covalence :  ',covTest);
     corVal = correlation(covTest); // corVal données globale pour affichaeg matrice
     console.log('correlation : ',corVal);
-    let vp = jacobi(corVal,100,corVal.length,0.);
+    let vp = jacobi(corVal,200,corVal.length,0.);
     console.log('vp: ',vp);
     vp.forEach((a,i)=>result[i]['vp']=a[i,i]);
     console.log('result : ',result);
+	console.log('tst new jacobi');
+    jacobiV2(corVal,0,corVal.length,0.);
 	return result;
 }
 function covalence(A) {
@@ -1320,6 +1334,97 @@ function jacobi(M,n,dim,limite) {
     console.log('result M ; ',M);
     return M;
 }
+function jacobiV2(a,nrot,n,limite) {
+/*	Computes all eigenvalues and eigenvectors of a real symmetric matrix a[1..n][1..n]. On
+	output, elements of a above the diagonal are destroyed. d[1..n] returns the eigenvalues of a.
+	v[1..n][1..n] is a matrix whose columns contain, on output, the normalized eigenvectors of
+	a. nrot returns the number of Jacobi rotations that were required.    console.log('M initial : ',M);
+	function ROTATE(a,i,j,k,l) {
+		g=a[i][j];h=a[k][l];a[i][j]=g-s*(h+g*tau);a[k][l]=h+s*(g-h*tau);
+	}
+*/
+	var b=zerosV(n), z=zerosV(n);
+	let v=zeros(n,n), d=zerosV(n);
+	let tau=0.0;
+	for (ip=0;ip<n;ip++) { //Initialize to the identity matrix.
+		v[ip][ip]=1.0;
+	}
+	for (ip=0;ip<n;ip++) { //Initialize b and d to the diagonal of a.
+		b[ip]=a[ip][ip]; 
+		d[ip]=a[ip][ip];
+		z[ip]=0.0; //This vector will accumulate terms of the form tapq as in equation (11.1.14).
+	}
+	nrot=0;
+	for (i=1;i<=50;i++) {
+		sm=0.0;
+		for (ip=0;ip<(n-1);ip++) { //Sum off-diagonal elements.
+			for (iq=ip+1;iq<n;iq++)
+				sm += Math.abs(a[ip][iq]);
+		}
+		if (sm == 0.0) { //The normal return, which relies on quadratic convergence to machine underflow.
+			// free_vector(z,1,n);
+			// free_vector(b,1,n);
+			console.log('Valeurs  : ',d);
+			console.log('Vecteurs : ',v);
+			return;
+		}
+		if (i < 4)
+		{	tresh=0.2*sm/(n*n); //...on the first three sweeps.
+		}else { tresh=0.0; } //...thereafter.
+		for (ip=0;ip<(n-1);ip++) {
+			for (iq=ip+1;iq<n;iq++) {
+				g=100.0*Math.abs(a[ip][iq]);
+				// After four sweeps, skip the rotation if the off-diagonal element is small.
+				if (i > 4 && (Math.abs(d[ip])+g) == Math.abs(d[ip]) &&(Math.abs(d[iq])+g) == Math.abs(d[iq]))
+				{	a[ip][iq]=0.0;
+				}else{ if (Math.abs(a[ip][iq]) > tresh) {
+						  h=d[iq]-d[ip];
+						  if ((Math.abs(h)+g) == Math.abs(h))
+						  { t=(a[ip][iq])/h;} //t = 1/(2θ) 
+						  else {
+							theta=0.5*h/(a[ip][iq]); // Equation (11.1.10).
+							t=1.0/(Math.abs(theta)+Math.sqrt(1.0+theta*theta));
+							if (theta < 0.0) t = -t;
+						  }
+					c=1.0/Math.sqrt(1+t*t);
+					s=t*c;
+					tau=s/(1.0+c);
+					h=t*a[ip][iq];
+					z[ip] -= h;	z[iq] += h;
+					d[ip] -= h;	d[iq] += h;
+					a[ip][iq]=0.0;
+					for (j=0;j<(ip-1);j++) { //Case of rotations 1 ≤ j < p.
+//						ROTATE(a,j,ip,j,iq)
+//						ROTATE(a,i,j, k,l)
+						g=a[j][ip];h=a[j][iq];a[j][ip]=g-s*(h+g*tau);a[j][iq]=h+s*(g-h*tau);
+					}
+					for (j=ip+1;j<iq-1;j++) { //Case of rotations p < j < q.
+//						ROTATE(a,ip,j,j,iq)
+//						ROTATE(a,i,j,k,l)
+						g=a[ip][j];h=a[j][iq];a[ip][j]=g-s*(h+g*tau);a[j][iq]=h+s*(g-h*tau);
+					}
+					for (j=iq+1;j<n;j++) { //Case of rotations q < j ≤ n.
+//						ROTATE(a,ip,j,iq,j)
+//						ROTATE(a,i,j,k,l)
+						g=a[ip][j];h=a[iq][j];a[ip][j]=g-s*(h+g*tau);a[iq][j]=h+s*(g-h*tau);
+					}
+					for (j=0;j<n;j++) {
+//						ROTATE(v,j,ip,j,iq)
+//						ROTATE(a,i,j,k,l)
+						g=v[j][ip];h=v[j][iq];v[j][ip]=g-s*(h+g*tau);v[j][iq]=h+s*(g-h*tau);
+					}
+					++nrot;
+				}}
+			}
+		}
+		for (ip=0;ip<n;ip++) {
+			b[ip] += z[ip];
+			d[ip]=b[ip]; // Update d with the sum of tapq,
+			z[ip]=0.0; //and reinitialize z.
+		}
+	}
+	console.log("Too many iterations in routine jacobi");
+} // end fonction
 function Givens(n,i,j,at) {
     let G = zeros(n,n);
     for (x=-1;++x<n;) {
@@ -1338,6 +1443,13 @@ function zeros(n,m) {
         for(j=-1;++j<m;) {
             Z[i].push(0);
         }
+    }
+    return Z;
+}
+function zerosV(n) {
+    let Z=[];
+    for(i=-1;++i<n;) {
+        Z.push(0);
     }
     return Z;
 }
