@@ -134,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 2.20</aside>
+  <aside >Avril, 2019<br><br> | v 2.22</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -191,7 +191,7 @@ input#to {
     var urlTime = '';
     var urlRes = '&resolution='+interval;
     var url = '';
-    var indexCouleur = [];
+    var indexCouleur = [],frequence=[];
 	var QUS_EP = 'RON_QUS_Soude_HCN,RON_QUS_Ammoniaque_HCN,RON_QUS_Azote_HCN,RON_QUS_Azote_HCN,RON_QUS_Gaz_Ferme_HCN,RON_QUS_Gaz_Procédé_HCN,RON_QUS_Vapeur_HCN,RON_QUS_ED_HCN,RON_QUS_Air_HCN,RON_QUS_Vapeur_Produite_HCN';
 	var PUS_EP = 'RON_PUS_Soude_HCN,RON_PUS_Ammoniaque_HCN,RON_PUS_Ammoniaque_HCN,RON_PUS_Azote_HCN,RON_PUS_Gaz_Ferme_HCN,RON_PUS_Gaz_Procédé_HCN,RON_PUS_Vapeur_HCN,RON_PUS_ED_HCN,RON_PUS_Air_HCN,RON_PUS_Vapeur_Produite_HCN';
     let listeVal = [{nom:'RON_Masse_HCN_Estimation_MMP_Théorique',select:2},
@@ -318,7 +318,7 @@ var	titreTexte = titreG.append('text')
 		.text(d=>d.n);
 }
 function clickTitre(d) {
-	console.log(d);
+    //	console.log(d);
 	switch (d.id) {
 		case 1:
 			selCourbe = (selCourbe==0 ? (AllData.length-1):(selCourbe-1) ) ; 
@@ -638,11 +638,11 @@ function graphe(v=0) {
         urlTime = '&from='+encodeURIComponent(from.toISOString())+'&to='+encodeURIComponent(to.toISOString());
 //        console.log(urlTime);
 		from_to=[];
-		console.log('interval ',IntervalData[selInter]);
-		for (let i=from.getTime();i<=to.getTime();i+=IntervalData[selInter].e*60*60*1000) {
-			from_to.push(i);
-		}
-		console.log(from_to);
+        if (selInter != -1) {
+            //	console.log('interval ',selInter,IntervalData[selInter]);
+            for (let i=from.getTime();i<=to.getTime();i+=IntervalData[selInter].e*60*60*1000) { from_to.push(i);}
+            //console.log(from_to);
+        }
 	}
 //--------------------------------------------------------------------------------------
 // -- Get Data from Optimistik -//// OLD VERSION ////
@@ -1159,6 +1159,14 @@ function dataCompute() {
         a['min'] = (Math.min.apply(Math, a.values.map(function(o) { return (unSelect.find(b=>{return o.timestamp==b;}) == undefined)?o.value:Infinity; })));
         //maxVal(a.values,'value');
 //        val.forEach((a)=>indexCode.push(code(a)));
+        let fq=zerosV(9);
+        a.values.forEach(b=>{
+            if (unSelect.find(c=>{return b.timestamp==c;}) == undefined) {
+                f=(Math.max(Math.min(8,Math.round((b.value-a.moyenne)/a.stDev)+4),0));
+                fq[f] += 1;}
+            });
+        //console.log(fq);
+        a['frequence'] = fq;
       }
     });
 	couleurCompute();
@@ -1189,19 +1197,25 @@ function acp() {
     s  = s.sort((a, b) => b - a);
     s.forEach(a=>o.push(vp.valeurs.indexOf(a)) );
     console.log(o);
-    let f=[];
-    result.forEach((a,i)=> {f.push([]);o.forEach(b=>
-        f[i].push(vp.vecteurs[i][b]*Math.sqrt(vp.valeurs[b])) );
+    let f=[],c=zeros(corVal.length,corVal.length);
+    result.forEach((a,i)=> {f.push([]);o.forEach((b,j)=>{
+        f[i].push(vp.vecteurs[i][b]*Math.sqrt(vp.valeurs[b])) ;
+        c[j][i] = vp.vecteurs[i][b] ;});
     });
-    console.log('facteurs',f);
+//    console.log(f);
     result['ordre']=o;
     result['vecteurs']=vp.vecteurs;
     result['valeurs']=vp.valeurs;
     result['facteurs']=f;
+    result['corr']=c;
     s.forEach((a,i)=> { 
         result[i]['f']=f[i];
         result[i]['c']=corVal[i];
       });
+    let ip = matrixDot(transpose(vp.vecteurs),val);
+    result['projections']=ip;
+//    console.log('test proj.',ip);
+    console.log(ip[o[0]],ip[o[1]]);
     console.log('acp analyse: ',result);
 	return result;
 }
@@ -1270,20 +1284,26 @@ console.log('stat : ',stat,'matrice normée : ',test2);
 //    console.log(s,vp.valeurs);
     s.forEach(a=>o.push(vp.valeurs.indexOf(a)) );
     console.log(o);
-    let f=[];
-    result.forEach((a,i)=> {f.push([]);o.forEach(b=>
-        f[i].push(vp.vecteurs[i][b]*Math.sqrt(vp.valeurs[b])) );
+    let f=[],c=zeros(corVal.length,corVal.length);
+    result.forEach((a,i)=> {f.push([]);o.forEach((b,j)=>{
+        f[i].push(vp.vecteurs[i][b]*Math.sqrt(vp.valeurs[b])) ;
+        c[j][i] = vp.vecteurs[i][b] ;});
     });
-    console.log(f);
+//    console.log(f);
     result['ordre']=o;
     result['vecteurs']=vp.vecteurs;
     result['valeurs']=vp.valeurs;
     result['facteurs']=f;
+    result['corr']=c;
     s.forEach((a,i)=> { 
         result[i]['f']=f[i];
         result[i]['c']=corVal[i];
       });
     console.log('acp : ',result);
+    let ip = matrixDot(transpose(vp.vecteurs),test);
+    result['projections']=ip;
+    console.log('test proj.',ip);
+    console.log(ip[o[0]],ip[o[1]]);
 //	console.log('tst new jacobi');
 //    jacobiV2(corVal,0,corVal.length,0.);
 	return result;
@@ -1313,6 +1333,11 @@ function correlation(A) {
         result.push([]);
         a.forEach((f)=>result[ind].push(f/div));
     });
+    return result;
+}
+function vecteurDot(A, B) {
+    result = 0;
+    for(i=-1;++i<A.length;) { result += A[i]*B[i];};
     return result;
 }
 function matrixDot(A, B) {
@@ -1507,7 +1532,9 @@ function analyse() {
         eigen = acp_test(); //console.log('Resultat VP',eigen);
 //        let F=matrixDot();
     } // sinon mise au point à partir de données test
-	
+    const add = (a,b) => Math.abs(a)+Math.abs(b);
+	const f1_sum = eigen.corr[0].reduce(add);
+    const f2_sum = eigen.corr[1].reduce(add);
 	var w = (width/2)-margin.left-padding-margin.right, h = w; // on test ...
 	// on ajuste le svg
     svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right+padding)+" "+(2*(h+margin.top+margin.bottom+padding)));
@@ -1699,6 +1726,9 @@ function analyse() {
             .attr('transform', 'translate(' + (-2*margin.left) + ',' + (h/2) + ')rotate(270)');
 
     }
+    //----------------
+    // cercle des corrélations.
+    //
     let cercleCorr = graph.append('g')
             .attr('id', 'cercleplot')
             .attr('transform', 'translate('+margin.left+','+(h+2*margin.top)+')');
@@ -1713,10 +1743,6 @@ function analyse() {
             Xval.push(eigen[i].f[0]);
             Yval.push(eigen[i].f[1]);
         };
-
-//        d3.selectAll('.points').remove();
-//        d3.selectAll('.axis').remove();
-//        d3.selectAll('.scatterlabel').remove();
 
         let xScale = d3.scaleLinear()
   //          .domain(d3.extent(Xval))
@@ -1762,23 +1788,91 @@ function analyse() {
 
 function affTextEigen(d) {
     //console.log(d);
+    //console.log('fi',f1_sum,f2_sum,eigen.corr[0][d],eigen.valeurs[eigen.ordre[0]]);
         cercleCorr.append('text').attr('id','eigenNom')
-            .text(eigen[d].nom+' ['+eigen[d].f[0].toFixed(3)+' / '+eigen[d].f[1].toFixed(3)+']')
+            .text(eigen[d].nom+' ['+eigen[d].f[0].toFixed(3)+' / '+eigen[d].f[1].toFixed(3)+']'+
+                ' (F0='+(eigen[d].f[0]*eigen[d].f[0]/eigen.valeurs[eigen.ordre[0]]*100.0).toFixed(1)+'%)'+
+                ' (F1='+(eigen[d].f[1]*eigen[d].f[1]/eigen.valeurs[eigen.ordre[1]]*100.0).toFixed(1)+'%)')
             .attr('class', 'scatterlabel').style('font-size','1.3vw')
             .attr('x',xScale(Xval[d])+5).attr('y',yScale(Yval[d])-5)
             .attr('text-anchor', 'start').attr('dominant-baseline', 'start');
         }
 
         cercleCorr.append('text')
-            .text((eigen.valeurs[eigen.ordre[1]]/nbTag*100.0).toFixed(1)+' %')
+            .text('F1 -> '+(eigen.valeurs[eigen.ordre[1]]/nbTag*100.0).toFixed(1)+' %')
             .attr('class', 'corrPoid').style('font-size','1.3vw')
             .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
             .attr('transform', 'translate(' + (-margin.left) + ',' + (h/2) + ')rotate(270)');
         cercleCorr.append('text')
-            .text((eigen.valeurs[eigen.ordre[0]]/nbTag*100.0).toFixed(1)+' %')
+            .text('F0 -> '+(eigen.valeurs[eigen.ordre[0]]/nbTag*100.0).toFixed(1)+' %')
             .attr('class', 'corrPoid').style('font-size','1.3vw')
             .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
             .attr('transform', 'translate(' + w/2 + ',' + (h+margin.top) + ')');
+
+    //----------------
+    // projection factorielle
+    //
+    let projFactor = graph.append('g')
+            .attr('id', 'projplot')
+            .attr('transform', 'translate('+(w+2*margin.left)+','+(h+2*margin.top)+')');
+
+    projFactor.append('text')
+        .text('Projection factorielle des items')
+        .attr('x', w/2).attr('y', 0)
+        .style('dominant-baseline', 'middle').style('text-anchor', 'middle');
+
+        let X0val=[], Y1val=[];
+        console.log(eigen.projections[0].length,eigen.projections[eigen.ordre[0]]);
+        for (i=-1;++i<eigen.projections[0].length;) {
+            X0val.push(eigen.projections[eigen.ordre[0]][i]);
+            Y1val.push(eigen.projections[eigen.ordre[1]][i]);
+        };
+        const maxAbs = (a,b) => { if (Math.abs(a)>Math.abs(b)) {return Math.abs(a);} else{ return Math.abs(b);} };
+        const x0M = X0val.reduce(maxAbs);
+        const y1M = Y1val.reduce(maxAbs);
+        const max = Math.max(x0M,y1M);
+        let x0Scale = d3.scaleLinear()
+//            .domain(d3.extent(X0val))
+            .domain([-max,max])
+            .range([0, w]);
+        let y1Scale = d3.scaleLinear()
+//            .domain(d3.extent(Y1val))
+            .domain([-max,max])
+            .range([h, 0]);
+        let x0Axis = d3.axisBottom()
+            .scale(x0Scale)
+            .ticks(10)
+            .tickSize(-w);
+        let y1Axis = d3.axisLeft()
+            .scale(y1Scale)
+            .tickSize(-h); //xx ep ?
+        projFactor.append('g')
+//            .attr('class', 'x axis')
+            .attr('transform', 'translate(0,' + h + ')')
+            .call(x0Axis);
+
+        projFactor.append('g')
+//            .attr('class', 'y axis')
+            .call(y1Axis);
+
+/*        projFactor.append('circle')
+            .attr('cx', w/2).attr('cy', h/2)
+            .attr('r',w/2).style('stroke','blue').style('fill','white').style('opacity',0.5);
+*/        
+        projFactor.append('g')
+            .attr('class', 'projPoints')
+            .selectAll('empty')
+            .data(d3.range(X0val.length))
+            .enter().append('circle')
+            .attr('class', 'point')
+            .attr('cx',function(d) { return x0Scale(X0val[d]);})
+            .attr('cy', function(d) { return y1Scale(Y1val[d]);})
+            .attr('r', 2)
+            .style('stroke', 'none')
+            .style('fill', 'red')
+//            .on('mouseover',affTextEigen)
+//            .on('mouseout',function(d) {cercleCorr.selectAll('#eigenNom').remove();})
+            ;
 
 }
 //
