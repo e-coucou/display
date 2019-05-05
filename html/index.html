@@ -134,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 2.70</aside>
+  <aside >Avril, 2019<br><br> | v 2.71a</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -240,9 +240,10 @@ input#to {
 			{nom:'N-TCS82705',select:0},
 			{nom:'N-TC82708',select:0}
 			];
+    var listeDashboard = [];
     var unSelect = [],brushListe=[];
 	var corVal;
-	var dispatch = d3.dispatch('load','change','partial');
+	var dispatch = d3.dispatch('load','change','partial','dashboard','update');
     let icon = ['eye-slash','plus','eye','code'];
 	// Chart dimensions.
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
@@ -404,6 +405,8 @@ function clickMenu(d,i) {
     selGraphique();
     dispatch.on('load',selGraphique);
     dispatch.on('partial',assData);
+    dispatch.on('dashboard',Dashboard);
+    dispatch.on('update',updateDashboard);
 //
 //---
 //
@@ -679,16 +682,6 @@ function zoomed() {
     } //end graphe
 
 //--
-//-------------------------------------------------------------------------------------
-	function Dashboard() {
-//		let v = d3.select("#value_select").property('value');
-		var d = new Date(AllData[1].values[1].timestamp).toLocaleDateString("fr-FR")
-		var t = new Date(AllData[1].values[1].timestamp).toLocaleTimeString("fr-FR") 
-//		infoG.select('text').text(AllData[v].dataReference+" ["+AllData[v].unit+"]");
-        graph.selectAll('g').remove();
-		d3.select('#seconde').remove();
-        graphe(v);
-	}
     function updateDate() {
         let from = new Date(d3.select("#from").property('value'));
         let to = new Date(d3.select("#to").property('value'));
@@ -826,6 +819,26 @@ function getAllData(urldata) {
     })   
 }
 //----------------------------------------------------------------------------------------
+//- lecture du dashboard ...
+//----------------------------------------
+var dashData=[];
+function getDashData(urldata,index) {
+    var opt = fetch(urldata, {method: 'GET',headers: new Headers({'Access-Control-Allow-Origin':'*','Accept':'application/json',
+        'mode':'no-cors','credentials':'includes','Authorization':'basic '+code})}).then(response => {
+        return response.json();
+        })
+    .then(data => { 
+            dashData[index]=data;
+            dispatch.call('dashboard');
+        })
+    .catch(err => {
+        infoG.select('text').text("ERREUR : "+err);
+        infoG.select('circle').attr('fill','black');
+//        config.dataOK=false;
+      console.log(err);
+    })   
+}
+//----------------------------------------------------------------------------------------
 //- lecture par morceau ..
 //----------------------------------------
 // Nouvelle fonction de récupération des données en une seule requête !
@@ -866,33 +879,33 @@ function assData() {
     }
 }
 function compileData(data) {
-            CumulData=[],DivData=[],AllData=[];
-            listeVal.forEach( (a,i) => {
-                let o = data.find( f => { return (f.dataReference == a.nom);});
-                if (o != undefined) {
-                    listeVal[i]['unit']= o.unit;
-                    listeVal[i]['values']= o.values;
-                }
-            });
-            infoG.select('text').text("Données disponibles !");
-            infoG.select('circle').attr('fill','#03C03C');
-            config.dataOK=true;
-            // on reparti les data
-            data.forEach(a=>{
-                let f=listeVal.filter(b=>b.nom==a.dataReference);// console.log('data',f);
-                switch (f[0].select) {
-                    case 1 : CumulData.push(a);break;
-                    case 2 : AllData.push(a);break;
-                    case 3 : DivData.push(a);break;
-                }
-            });
+    CumulData=[],DivData=[],AllData=[];
+    listeVal.forEach( (a,i) => {
+        let o = data.find( f => { return (f.dataReference == a.nom);});
+            if (o != undefined) {
+                listeVal[i]['unit']= o.unit;
+                listeVal[i]['values']= o.values;
+            }
+        });
+    infoG.select('text').text("Données disponibles !");
+    infoG.select('circle').attr('fill','#03C03C');
+    config.dataOK=true;
+    // on reparti les data
+    data.forEach(a=>{
+        let f=listeVal.filter(b=>b.nom==a.dataReference);// console.log('data',f);
+            switch (f[0].select) {
+                case 1 : CumulData.push(a);break;
+                case 2 : AllData.push(a);break;
+                case 3 : DivData.push(a);break;
+            }
+        });
 //          console.log('AllData',AllData); console.log('CumulData',CumulData); console.log('DivData',DivData);
-            cumulCompute();
-            if (DivData.length >0) divCompute();
-            dataCompute();
-            selGraphe=0;
-            selCourbe=indexRef;
-            dispatch.call('load');
+    cumulCompute();
+    if (DivData.length >0) divCompute();
+    dataCompute();
+    selGraphe=0;
+    selCourbe=indexRef;
+    dispatch.call('load');
 }
 //-----
 function getAllTag() {
@@ -922,10 +935,7 @@ function getAllTag() {
 //   SCATTER PLOT MATRIX
 //
 //
-
-    // le tootip !
-
-    function matrix() {
+function matrix() {
 		doGraphe(1);
         nbTag = AllData.length - 1;
         let size = Math.round((window.innerHeight-margin.top-margin.bottom) / nbTag)-10, padding =10;
@@ -1143,8 +1153,7 @@ function getAllTag() {
 				}
 		}
     }
-}
-//-- End MATRIX SCATTERPLOT
+} //-- End MATRIX SCATTERPLOT
 //
 //----------------------------------------------------------------
 // Calcul la somme des cumuls
@@ -1198,7 +1207,7 @@ function couleurCompute() {
     let val = [], carre=[];
     AllData[indexRef].values.forEach(function(a) {
 		if (unSelect.find(b=>{return a.timestamp==b;}) == undefined) val.push(a.value) ;} );
-    let average = (array) => array.reduce((a, b) => { return a + b; }) / array.length;
+//    let average = (array) => array.reduce((a, b) => { return a + b; }) / array.length;
     let moyenne = average(val);
     val.forEach((a)=>carre.push( (a-moyenne)*(a-moyenne) ));
     let stDev = (Math.sqrt(average(carre)*(val.length/(val.length-1))));
@@ -1259,7 +1268,7 @@ function dataCompute() {
 	infoG.select('text').text("Maj des Statistiques");
     infoG.select('circle').attr('fill','Orange');
 	//functions globales
-	let average = (array) => array.reduce((a, b) => { return a + b; }) / array.length;
+//	let average = (array) => array.reduce((a, b) => { return a + b; }) / array.length;
 	let code = (a) => inRange(a,moyenne-3*stDev,stDev)
                          +inRange(a,moyenne-2*stDev,stDev)*2
                          +inRange(a,moyenne-stDev,stDev)*3
@@ -1355,7 +1364,7 @@ function acp() {
 	return result;
 }
 
-let average = (array) => array.reduce((a, b) => { return a + b; }) / array.length;
+//let average = (array) => array.reduce((a, b) => { return a + b; }) / array.length;
 
 function acp_test() {
 temporelle=['Alfasud TI','Audi' , 'Simca','Citroen GS Club','Fiat','Lancia Beta','Peugeot','Renault 16 TL','Renault 30','Toyota Corolla','Alfetta','Princess','Datsun-200L','Taunus-2000','Rancho','Mazda-9295','Opel-Rekord','Lada-1300'];
@@ -2080,7 +2089,8 @@ function load_d3(fileHandler) {
 }
 function loadDashBoard() {
     d3.json("../data/dashboard.json").then(function(json) {
-        console.log(json);
+        listeDashboard=json;
+        dispatch.call('update');
     });
 }
 //----------------------------------------------------------------
@@ -2093,6 +2103,58 @@ function clearSVG() {
     d3.select('#seconde').remove();
     svg.selectAll("#fourchette").remove();
 }
+//----
+//
+function updateDashboard() {
+    console.log(listeDashboard);
+    let refDashboard='';
+    let now = new Date(Date.now());
+    let today = new Date(now);
+    today.setHours(0,0,0,0);
+    ref = today.getTime();
+    let yesterday = new Date(ref-3600000*24);
+    let tomorrow = new Date(ref+3600000*24);
+    //console.log(today,new Date(today).toISOString());
+    urlTime = '&from='+encodeURIComponent(yesterday.toISOString())+'&to='+encodeURIComponent(today.toISOString());
+    console.log(urlTime);
+    for(let i=-1;++i<(listeDashboard.length);) {
+        refDashboard += (refDashboard==''?'':',')+listeDashboard[i].tag;
+    }
+    url = urlBase+encodeURIComponent(refDashboard)+urlTime+'&resolution=PT1H';
+    console.log(url);
+    getDashData(url,'hier');
+    urlTime = '&from='+encodeURIComponent(new Date(now.getTime()-360000).toISOString())+'&to='+encodeURIComponent(now.toISOString());
+    url = urlBase+encodeURIComponent(refDashboard)+urlTime+'&resolution=PT1M';
+    console.log(url);
+    getDashData(url,'now');
+    urlTime = '&from='+encodeURIComponent(today.toISOString())+'&to='+encodeURIComponent(now.toISOString());
+    url = urlBase+encodeURIComponent(refDashboard)+urlTime+'&resolution=PT1H';
+    console.log(url);
+    getDashData(url,'today');
+}
+//-------------------------------------------------------------------------------------
+//  Afficahge du dashBoard
+//-
+function Dashboard() {
+/*      let v = d3.select("#value_select").property('value');
+        var d = new Date(AllData[1].values[1].timestamp).toLocaleDateString("fr-FR")
+        var t = new Date(AllData[1].values[1].timestamp).toLocaleTimeString("fr-FR") 
+//      infoG.select('text').text(AllData[v].dataReference+" ["+AllData[v].unit+"]");
+        graph.selectAll('g').remove();
+        d3.select('#seconde').remove();
+        graphe(v);
+*/
+//    let average = (array) => array.reduce((a, b) => { return a + b.value; }) / array.length;
+
+    if (Object.keys(dashData).length == 3) {
+        console.log(dashData);
+        console.log(dashData.hier.values);
+        console.log(averageOI(dashData.hier[0].values));
+        doGraphe(5);
+    }
+}
+//------------------------
+// Gestion du menu principal
 //
 function selGraphique() {
     clearSVG();
@@ -2128,7 +2190,9 @@ function selGraphique() {
             if (config.credOK && !config.tagOK) getAllTag();
             selection();break;
           case 5:
-            if (config.credOK) loadDashBoard();
+            if (config.credOK) {
+                loadDashBoard();
+            }
             break;
           case -1:
             cred();

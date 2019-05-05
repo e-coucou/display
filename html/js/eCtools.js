@@ -8,6 +8,8 @@ let valFormat = (a) => {
         return String(r).replace(/(.)(?=(\d{3})+$)/g,'$1 ');
 //        return r;
         }
+let average = (array) => array.reduce((a, b) => { return a + b; }) / array.length;
+let averageOI = (array) => array.reduce((a, b) => { return (a | a.value) + b.value; }) / array.length;
 
 // maths Function
 //
