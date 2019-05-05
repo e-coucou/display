@@ -134,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 2.71a</aside>
+  <aside >Avril, 2019<br><br> | v 2.81a</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -2123,7 +2123,7 @@ function updateDashboard() {
     url = urlBase+encodeURIComponent(refDashboard)+urlTime+'&resolution=PT1H';
     console.log(url);
     getDashData(url,'hier');
-    urlTime = '&from='+encodeURIComponent(new Date(now.getTime()-360000).toISOString())+'&to='+encodeURIComponent(now.toISOString());
+    urlTime = '&from='+encodeURIComponent(new Date(now.getTime()-600000).toISOString())+'&to='+encodeURIComponent(now.toISOString());
     url = urlBase+encodeURIComponent(refDashboard)+urlTime+'&resolution=PT1M';
     console.log(url);
     getDashData(url,'now');
@@ -2148,8 +2148,15 @@ function Dashboard() {
 
     if (Object.keys(dashData).length == 3) {
         console.log(dashData);
-        console.log(dashData.hier.values);
-        console.log(averageOI(dashData.hier[0].values));
+        let data = [];
+        for (i=-1;++i<dashData.hier.length;) {
+            data.push({'nom':dashData.now[i].dataReference, 
+                'now':(dashData.now[i].values[0].value.toFixed(0)),
+                'today':averageOI(dashData.today[i].values).toFixed(0),
+                'hier':averageOI(dashData.hier[i].values).toFixed(0),
+                'cmj':listeDashboard[i].cmj});
+        }
+        console.log(data);
         doGraphe(5);
     }
 }
