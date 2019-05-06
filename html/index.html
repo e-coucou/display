@@ -134,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 2.81a</aside>
+  <aside >Avril, 2019<br><br> | v 2.82a</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -2151,13 +2151,27 @@ function Dashboard() {
         let data = [];
         for (i=-1;++i<dashData.hier.length;) {
             data.push({'nom':dashData.now[i].dataReference, 
-                'now':(dashData.now[i].values[0].value.toFixed(0)),
+                'now':(dashData.now[i].values[0]),
                 'today':averageOI(dashData.today[i].values).toFixed(0),
-                'hier':averageOI(dashData.hier[i].values).toFixed(0),
+                'hier':averageOI(dashData.hier[i].values),
                 'cmj':listeDashboard[i].cmj});
         }
         console.log(data);
         doGraphe(5);
+		var w = (width-margin.left-margin.right), h = window.innerHeight - margin.top - margin.bottom; // on test ...
+		// on ajuste le svg
+		svg.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+(h+margin.top+margin.bottom));
+		if (config.arbreOK)  arbre.regenerate(false);
+
+		graph.selectAll('g').remove();
+		let DashG = graph.append('g')
+			.attr('transform', 'translate(' + margin.left+ ',' + margin.top + ')')
+			.attr('width', w).attr('height', h);
+		let product = DashG.selectAll('g').data(data).enter().append('g');
+		
+		product.append('rect')
+			.attr('x',(d,i)=>{return i*30;}).attr('y',(d)=>{return 120-d.hier/d.cmj/10;}).style('fill','blue')
+			.attr('height',(d)=>{return d.hier/d.cmj/10;}).attr('width',25);
     }
 }
 //------------------------
