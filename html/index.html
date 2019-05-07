@@ -134,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 2.83a</aside>
+  <aside >Avril, 2019<br><br> | v 2.90b</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -470,6 +470,37 @@ function graphe(v=0) {
         clearSVG();
         graphe(selCourbe);
     }
+    //----------------------------------------------
+    //---- Filtrage des valeurs ... 
+    //epxxx
+	svg.append('g')
+		.append('circle').attr('cx',margin.left+10).attr('cy',17).style('fill','blue').attr('r',15)
+		.on('mouseover',function(d){ d3.select(this).style('fill','red');})
+		.on('mouseout',function(d){ d3.select(this).style('fill','blue');})
+		.on('click',filtreAuto);
+	svg.append('g')
+		.append('circle').attr('cx',margin.left+50).attr('cy',17).style('fill','blue').attr('r',15)
+		.on('mouseover',function(d){ d3.select(this).style('fill','red');})
+		.on('mouseout',function(d){ d3.select(this).style('fill','blue');})
+		.on('click',filtreReset);
+	function filtreReset() {
+		unSelect = [];
+		dataCompute();
+	}
+	function filtreAuto() {
+		//console.log(AllData[v]);
+		let idx = listeVal.findIndex(d=>d.nom==AllData[v].dataReference);
+		//console.log(idx,listeVal[idx]);
+		let sH = listeVal[idx].moyenne+listeVal[idx].stDev;
+		let sL = listeVal[idx].moyenne-listeVal[idx].stDev;
+        AllData[v].values.forEach((v)=>{
+			if (v.value>sH ||v.value<sL) {
+				if (unSelect.find((a)=>{return v.timestamp===a;}) == undefined)  { unSelect.push(v.timestamp);	}
+			}
+		});
+		dataCompute();
+	}
+	//--------------------	
 
     seed.y = height+margin.top+margin.bottom;
     if (config.arbreOK)  arbre.regenerate(false);
@@ -682,19 +713,19 @@ function zoomed() {
     } //end graphe
 
 //--
-    function updateDate() {
-        let from = new Date(d3.select("#from").property('value'));
-        let to = new Date(d3.select("#to").property('value'));
-        let t = new Date(from);
-        urlTime = '&from='+encodeURIComponent(from.toISOString())+'&to='+encodeURIComponent(to.toISOString());
+function updateDate() {
+    let from = new Date(d3.select("#from").property('value'));
+    let to = new Date(d3.select("#to").property('value'));
+    let t = new Date(from);
+    urlTime = '&from='+encodeURIComponent(from.toISOString())+'&to='+encodeURIComponent(to.toISOString());
 //        console.log(urlTime);
-		from_to=[];
-        if (selInter != -1) {
-            //	console.log('interval ',selInter,IntervalData[selInter]);
-            for (let i=from.getTime();i<=to.getTime();i+=IntervalData[selInter].e*60*60*1000) { from_to.push(i);}
+	from_to=[];
+    if (selInter != -1) {
+    //	console.log('interval ',selInter,IntervalData[selInter]);
+		for (let i=from.getTime();i<=to.getTime();i+=IntervalData[selInter].e*60*60*1000) { from_to.push(i);}
             //console.log(from_to);
-        }
-	}
+    }
+}
 //--------------------------------------------------------------------------------------
 // -- Get Data from Optimistik -//// OLD VERSION ////
 //
@@ -844,6 +875,9 @@ function getDashData(urldata,index) {
 // Nouvelle fonction de récupération des données en une seule requête !
 var disData=[];
 function getSpiltData(urldata,index) {
+	disData = [];
+	infoG.select('text').text('requête OI');
+	infoG.select('circle').attr('fill','orange');
     var opt = fetch(urldata, {method: 'GET',headers: new Headers({'Access-Control-Allow-Origin':'*','Accept':'application/json',
         'mode':'no-cors','credentials':'includes','Authorization':'basic '+code})}).then(response => {
         return response.json();
@@ -874,7 +908,7 @@ function assData() {
 //        console.log(data);
         compileData(data);
     } else {
-        infoG.select('text').text("en cours  > "+valFormat(disData.length/(from_to.length-1)*100.0)+ ' <');
+        infoG.select('text').text("réception  > "+(disData.length/(from_to.length-1)*100.0).toFixed(0)+ ' <');
         infoG.select('circle').attr('fill','violet');
     }
 }
@@ -937,6 +971,8 @@ function getAllTag() {
 //
 function matrix() {
 		doGraphe(1);
+        infoG.select('text').text("Préparation des nuages ... ");
+        infoG.select('circle').attr('fill','yellow');
         nbTag = AllData.length - 1;
         let size = Math.round((window.innerHeight-margin.top-margin.bottom) / nbTag)-10, padding =10;
         if (matWid) {
@@ -1043,6 +1079,9 @@ function matrix() {
 
     cell.call(brush);
 
+    infoG.select('text').text("Done !");
+    infoG.select('circle').attr('fill','green');
+
     //---------------------------------
     // les fonctions de tracage 
     //
@@ -1068,7 +1107,7 @@ function matrix() {
             .enter().append("circle")
             .attr("cx", function(d,i) { return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)?x(AllData[p.i].values[i].value):0; })
             .attr("cy", function(d,i) { return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)?y(AllData[p.j].values[i].value):0; })
-            .attr("r", 3)
+            .attr("r", 1)
             .style("fill", function(d,i) {
                 return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)? indexCouleur[i]:'white';});
         circles.on('mousedown', function () {
@@ -1303,6 +1342,8 @@ function dataCompute() {
         a['frequence'] = fq;
       }
     });
+	infoG.select('text').text("Statistiques ok");
+    infoG.select('circle').attr('fill','Green');
 	couleurCompute();
 }
 //----------------------------------------------
@@ -1604,9 +1645,9 @@ function analyse() {
         .style('dominant-baseline', 'middle').style('text-anchor', 'middle');
 */
     var plotScatter = function(x, y) {
-        let Xval=[];
+        let Xval=[],XCol=[];
         listeVal.find(a=>{ return a.nom==eigen[x].nom;}).values.forEach
-			(b=> { if (unSelect.find(o=>{return b.timestamp==o;}) === undefined) Xval.push(b.value)});
+			((b,i)=> { if (unSelect.find(o=>{return b.timestamp==o;}) === undefined) { Xval.push(b.value);XCol.push(indexCouleur[i]);}});
         let Yval=[];
         listeVal.find(a=>{ return a.nom==eigen[y].nom;}).values.forEach
 			(b=> { if (unSelect.find(o=>{return b.timestamp==o;}) === undefined) Yval.push(b.value)});
@@ -1648,7 +1689,7 @@ function analyse() {
             .attr('r', 4)
             .style('stroke', 'none')
             .style("fill", function(d,i) {
-                return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)? indexCouleur[i]:'white';});
+                return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)? XCol[i]:'white';}); // reindex des couleurs !
 
         scatter.append('text')
             .text(eigen[x].nom)
