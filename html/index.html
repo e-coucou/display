@@ -473,32 +473,43 @@ function graphe(v=0) {
     //----------------------------------------------
     //---- Filtrage des valeurs ... 
     //epxxx
-	svg.append('g')
-		.append('circle').attr('cx',margin.left+10).attr('cy',17).style('fill','blue').attr('r',15)
+	var filtreData = [{n:0,nom:'F'},{n:1,nom:'R'}];
+	let filtreG = svg.selectAll('g').data(filtreData).enter().append('g');
+	
+	filtreG.append('circle').attr('cx',(d,i)=>{margin.left+10*i;}).attr('cy',17).style('fill','blue').attr('r',13)
 		.on('mouseover',function(d){ d3.select(this).style('fill','red');})
 		.on('mouseout',function(d){ d3.select(this).style('fill','blue');})
 		.on('click',filtreAuto);
-	svg.append('g')
+
+/*		svg.append('g')
 		.append('circle').attr('cx',margin.left+50).attr('cy',17).style('fill','blue').attr('r',15)
 		.on('mouseover',function(d){ d3.select(this).style('fill','red');})
 		.on('mouseout',function(d){ d3.select(this).style('fill','blue');})
 		.on('click',filtreReset);
-	function filtreReset() {
+*/	function filtreReset() {
 		unSelect = [];
 		dataCompute();
 	}
-	function filtreAuto() {
+	function filtreAuto(d,i) {
 		//console.log(AllData[v]);
-		let idx = listeVal.findIndex(d=>d.nom==AllData[v].dataReference);
+	  switch(d.n) {
+		case 0:
+		  let idx = listeVal.findIndex(d=>d.nom==AllData[v].dataReference);
 		//console.log(idx,listeVal[idx]);
-		let sH = listeVal[idx].moyenne+listeVal[idx].stDev;
-		let sL = listeVal[idx].moyenne-listeVal[idx].stDev;
+		  let sH = listeVal[idx].moyenne+listeVal[idx].stDev;
+		  let sL = listeVal[idx].moyenne-listeVal[idx].stDev;
         AllData[v].values.forEach((v)=>{
 			if (v.value>sH ||v.value<sL) {
 				if (unSelect.find((a)=>{return v.timestamp===a;}) == undefined)  { unSelect.push(v.timestamp);	}
 			}
 		});
 		dataCompute();
+		break;
+		case 1:
+		  unSelect = [];
+		  dataCompute();
+		  break;
+	  }
 	}
 	//--------------------	
 
@@ -508,10 +519,6 @@ function graphe(v=0) {
         .domain(AllData[v].values.map(d => toDate(d.timestamp)))
         .range([margin.left, width - margin.right])
         .padding(0.1);
-//ep      var xScale = d3.scaleTime().domain([minDate, maxDate]).range([margin.left, width-margin.right]);
-
-//	yMax = Math.max(Math.max.apply(Math, AllData[v].values.map(function(o) { return o.value; })),0);
-//	yMin = Math.min(Math.min.apply(Math, AllData[v].values.map(function(o) { return o.value; })),0);
     yMax = Math.max.apply(Math, AllData[v].values.map(function(o) { 
              return (unSelect.find(a=>{return o.timestamp==a;}) == undefined)? o.value:-Infinity; }));
     yMin = Math.min.apply(Math, AllData[v].values.map(function(o) { 
@@ -1105,9 +1112,9 @@ function matrix() {
         var circles = cell.selectAll("circle")
             .data(AllData[indexRef].values)
             .enter().append("circle")
-            .attr("cx", function(d,i) { return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)?x(AllData[p.i].values[i].value):0; })
-            .attr("cy", function(d,i) { return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)?y(AllData[p.j].values[i].value):0; })
-            .attr("r", 1)
+            .attr('cx', function(d,i) { return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)?x(AllData[p.i].values[i].value):0; })
+            .attr('cy', function(d,i) { return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)?y(AllData[p.j].values[i].value):0; })
+            .attr('r', 2)
             .style("fill", function(d,i) {
                 return (unSelect.find(a=>{return d.timestamp==a;}) == undefined)? indexCouleur[i]:'white';});
         circles.on('mousedown', function () {
@@ -2126,6 +2133,7 @@ function load_d3(fileHandler) {
     config.dataOK=false;
     infoG.select('text').text("Chargement fichier");
     infoG.select('circle').attr('fill','#d49');
+	updateListe();
     });
 }
 function loadDashBoard() {
