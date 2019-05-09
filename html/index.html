@@ -134,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Avril, 2019<br><br> | v 2.90b</aside>
+  <aside >Mai, 2019<br><br> | v 2.95b</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -185,6 +185,7 @@ input#to {
 	var refListe = '', refDiviseur='', refCumul='', refAll = ''; // refAll => version 2 et+
 	var interval = 'P1D'
     var urlData = 'https://cors-rky.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data';
+//    var urlBase = 'http://192.168.1.33:8080/https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
     var urlBase = 'https://cors-rky.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
 //    var urlData = 'https://cors-anywhere.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data';
 //    var urlBase = 'https://cors-anywhere.herokuapp.com/https://oianalytics-100.optimistik.fr/api/optimistik/data/time_values?dataReferenceList=';
@@ -474,9 +475,11 @@ function graphe(v=0) {
     //---- Filtrage des valeurs ... 
     //epxxx
 	var filtreData = [{n:0,nom:'F'},{n:1,nom:'R'}];
-	let filtreG = svg.selectAll('g').data(filtreData).enter().append('g');
-	
-	filtreG.append('circle').attr('cx',(d,i)=>{margin.left+10*i;}).attr('cy',17).style('fill','blue').attr('r',13)
+    let fg = svg.append('g').attr('id','filtre');
+	let filtreG = fg.selectAll('g').data(filtreData).enter()
+        .append('g').attr('transform','translate(0,0)');
+	console.log(filtreData);
+	filtreG.append('circle').attr('cx',(d,i)=>{return margin.left+30*i;}).attr('cy',17).style('fill','blue').attr('r',13)
 		.on('mouseover',function(d){ d3.select(this).style('fill','red');})
 		.on('mouseout',function(d){ d3.select(this).style('fill','blue');})
 		.on('click',filtreAuto);
@@ -498,13 +501,13 @@ function graphe(v=0) {
 		//console.log(idx,listeVal[idx]);
 		  let sH = listeVal[idx].moyenne+listeVal[idx].stDev;
 		  let sL = listeVal[idx].moyenne-listeVal[idx].stDev;
-        AllData[v].values.forEach((v)=>{
+          AllData[v].values.forEach((v)=>{
 			if (v.value>sH ||v.value<sL) {
 				if (unSelect.find((a)=>{return v.timestamp===a;}) == undefined)  { unSelect.push(v.timestamp);	}
 			}
-		});
-		dataCompute();
-		break;
+		  });
+		  dataCompute();
+		  break;
 		case 1:
 		  unSelect = [];
 		  dataCompute();
@@ -902,17 +905,18 @@ function getSpiltData(urldata,index) {
 }
 //- dispatch 'partial'
 function assData() {
+    //    console.log(disData.length,from_to.length)
     if (disData.length == (from_to.length-1)) {
         infoG.select('text').text('données Chargées !');
         infoG.select('circle').attr('fill','yellow');
-//        console.log(disData);
+        console.log(disData);
         let data=[];
         disData.forEach((a,i)=>{
             if (i==0) {data=a.slice();} else 
             { a.forEach((b,j)=>
                 data[j].values.push(...b.values));}
         });
-//        console.log(data);
+        console.log(data);
         compileData(data);
     } else {
         infoG.select('text').text("réception  > "+(disData.length/(from_to.length-1)*100.0).toFixed(0)+ ' <');
