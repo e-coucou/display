@@ -6,12 +6,66 @@
 <meta charset="utf-8">
 <title>HB</title>
 <style>
-@import url(../css/dsp.css);
+@import url(//fonts.googleapis.com/css?family=PT+Serif|PT+Serif:b|PT+Serif:i|PT+Sans|PT+Sans:b);
+/* 
+.rky header {
+    position: fixed;
+    top:0px;
+    left:0px;
+    width:100%;
+    height: 42px;
+    background: #FE6F5E;
+}
+.rky footer {
+    position: fixed;
+    bottom:0px;
+    left:0px;
+    width:100%;
+    height: 20px;
+    z-index: 10;
+    background: #FE6F5E;
+}
+.rky header,
+.rky footer,
+.rky aside,
+.rky h1,
+.rky #h1{
+  font-family: "helvetica neue", sans-serif;
+}
+.rky header aside, footer aside {
+    margin-left: 50px;
+}
+.rky h1 {
+  color: #191970;
+}
+.rky header,
+.rky footer {
+  color: white;
+}
+.rky aside,
+.rky footer {
+  font-size: 10px;
+  float: left;
+  margin-right: 0.8em;
+  padding-top: .3em;
+  line-height: 1.2em;
+}
+.rky header aside:after,
+.rky footer aside:after {
+  padding-left: .5em;
+  content: "|";
+}
+.rky footer {
+  margin-top: 1em;
+}
+h1 ~ aside {
+  font-size: small;
+  right: 0;
+  position: absolute;
+  width: 200px;
+}*/
 </style>
 <header>
-  <div id='h1'>HBC</div>
-  <aside >Mai, 2019<br><br> | v 0.01a</aside>
-  <div id='menu'></div>
 </header>
 <body>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -22,12 +76,291 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/numjs/0.16.0/numjs.js"></script>
     <script type="text/javascript" src="../js/arbre.js"></script>
+    <script type="text/javascript" src="../js/epAnim.js"></script>
+    <div id="chart"></div>
 <footer>
-<aside>(c) e-Coucou | y2kJ | Mai, 2019</aside>
-    <div id="info"></div>
 </footer>
     <script type="text/javascript">
 // Variables Globales
+const margin = {left:10, right:10, top:42, bottom:20 };
+const width = window.innerWidth;
+const height = window.innerHeight;
+var timer = d3.interval(anime,1000), cpt = 0;
+sequence = [0,0,0,0,0,0,0,0,0];
+
+let param = { ech: 1, duree:0, width : width, height:height, x:0, y:0, bBG : false, cBG: 'blue'};
+let i=0, data=[], x0=0,y0=0;
+  const xo = 200, yo=height-margin.bottom; //height-margin.bottom -10;
+  const tempo = 5;
+  let nbBalon = Math.trunc(Math.random()*100+40);
+  let anim = 0;
+  const couleur = ['red', 'blue','green','yellow','pink'];
+let toto = d3.interval(animate,tempo);
+toto.stop();
+
+var svg = d3.select("#chart") //.style('top','57px')
+    .append("svg")
+//	.attr('class','svg-contenair')
+//	.attr("preserveAspectRatio", "xMinYMin meet")
+	.attr("viewBox", "0 "+0+" "+(width)+" "+(height))
+    .attr("position", 2);
+//	.classed("svg-content", true);
+  let global = svg.append('g');
+//  HB();
+  global.append('rect')
+          .attr('x',0).attr('y',0)
+          .attr('width',width)
+          .attr('height',height)
+          .style('fill','darkgreen')
+          .on('click',click);
+  let ecoucou = global.append('text')
+    .style('fill','white').attr("text-anchor", "end").attr("font-family","sans-serif").style("font-size","8px")
+    .style("font-weight","bold").style("opacity",1.0).raise().attr('x',width-margin.right).attr('y',height-margin.bottom)
+    .text('e-Coucou y2kJ');
+  let ademain = global.append('text')
+    .style('fill','white').attr("text-anchor", "end").attr("font-family","sans-serif").style("font-size","8px")
+    .style("font-weight","bold").style("opacity",0.0).raise().attr('x',2*width/3).attr('y',height/2+margin.bottom)
+    .text('à Demain !');
+
+  // On affiche les étoiles dans le ciel qui scintillent ...
+  let etoile = [], nbE = Math.trunc(Math.random()*100+50);
+  for (let i = 0; i<=nbE;i++) {
+    let pt= {};
+    pt['x'] = Math.trunc(Math.random()*width);
+    pt['y'] = Math.trunc(Math.random()*height);
+    etoile.push(pt);
+  }
+  let stars = svg.append('g').attr('id','star').selectAll('circle').data(etoile).enter().append('circle')
+      .attr('cx',d=>{return d.x;}).attr('cy',d=>{return d.y;})
+      .style('fill','white').attr('r',1).style('opacity',function(){return Math.random()*.7;});
+
+    let espace = Math.trunc((param.ech-1)/4)+1;
+    let pixel = param.ech*2+espace;
+  var jour = new epAnim(param, '12/05/2019');
+  jour.couleur = ['red', 'pink','green','yellow','blue'];
+  jour.init();
+  let gjour = svg.append('g').attr('id','jour');
+  jour.set_origine(width/2 - 10*(pixel *3),height/2- pixel *4);
+  jour.dessine(gjour,'white');
+
+  global.selectAll('rect').transition().duration(5000).style('fill','black');
+
+let balon = global.selectAll('g');
+
+function a43() {
+//on calcul la position ...
+  param.ech=6;
+    let espace = Math.trunc((param.ech-1)/4)+1;
+    let pixel = param.ech*2+espace;
+
+  var a4 = new epAnim(param, '4');
+  a4.couleur = ['red', 'pink','green','yellow','blue'];
+  a4.init();
+  let g40 = svg.append('g').attr('id','Anim40');
+  a4.set_origine(width/2 - pixel *3,height/2- pixel *4);
+  a4.dessine(g40,'darkgreen');
+  var a3 = new epAnim(param, '3');
+  a3.couleur = ['red', 'pink','green','yellow','blue'];
+  a3.init();
+  let g03 = svg.append('g').attr('id','Anim03');
+  a3.set_origine(width/2 + pixel *3,height/2- pixel *4);
+  a3.dessine(g03,'darkgreen');
+}
+
+function HB() {
+  param.ech = 1; param.bBG = false;
+  param.duree = 5000;
+  let espace = Math.trunc((param.ech-1)/4)+1;
+  let pixel = param.ech*2+espace;
+  let anim = new epAnim(param, 'JOYEUX ANNIVERSAIRE');
+  anim.couleur = ['red', 'pink','green','yellow','blue'];
+  anim.init();
+  let g = svg.append('g').attr('id','Anim');
+  anim.set_origine(width/2 - 19*(pixel *3),height/2- pixel *4);
+  anim.dessine(g,'white');
+}
+function c04() {
+    let espace = Math.trunc((param.ech-1)/4)+1;
+    let pixel = param.ech*2+espace;
+  let a04 = new epAnim(param, '4');
+  param.duree = 5000;
+  a04.couleur = ['red', 'pink','green','yellow','blue'];
+  a04.init();
+  let g04 = svg.append('g').attr('id','Anim04');
+  a04.set_origine(width/2 + pixel *3,height/2- pixel *4);
+  a04.dessine(g04,'white');
+
+}
+
+  function cycle() {
+    if (anim==0) {
+      i=0; data=[];anim=1;
+      x0 = Math.trunc(Math.random()*(width));
+      y0 = Math.trunc(Math.random()*50+20);
+      data = InitData(x0,y0,30);
+      let xo = Math.trunc(Math.random()*(width));
+      global.selectAll('g').data([0]).enter()
+        .append('circle')
+        .attr('cx',xo)
+        .attr('cy',yo)
+        .attr('r',3)
+        .attr('id','id0')
+        .style('fill','blue')
+        .transition()
+          .duration(1000)
+          .ease(d3.easeLinear)
+          .attr('cx',x0).attr('cy',y0)
+          .attr('r',5)
+          .on('end',fusee);
+    }
+  }
+  
+  function fusee() {
+    balon = global.selectAll('g')
+      .data(data).enter()
+      .append('circle')
+        .attr('cx',d=>{return d.x;})
+        .attr('cy',d=>{return d.y;})
+        .attr('r',d=>{return d.R;})
+        .attr('id',d=>{return 'I'+d.n;})
+        .style('fill','white');
+    toto.restart(animate,tempo);
+    d3.select('#id0').remove();
+  }
+  
+  function animate() {
+    if (data.length != 0) {
+      let out = [];
+      for (var j in data) { //=0;j<nbBalon;j++) {
+        let d = balistique(i/10,data[j].Vx,data[j].Vy);
+        data[j].x += d[0];
+        data[j].y -= d[1];
+        data[j].R = data[j].R*(1-i/15/data[j].l);
+        data[j].C = couleur[Math.trunc(Math.random()*5)];
+        if (data[j].y >= height) out.push(Number(j));
+//        console.log(data[j]);
+      }
+//      console.log(out);
+      let o=0;
+      for (var k in out) {
+        let cls='#I'+data[out[k]-o].n;
+//        console.log(cls);
+        d3.select(cls).remove();
+        data.splice(out[k]-o,1);
+        o++;
+      }
+//      console.log(data[0]);
+      balon.attr('cx',d=>{return d.x;})
+        .attr('cy',d=>{return d.y;})
+        .attr('r',d=>{return d.R;})
+        .style('fill',d=>{return d.C;});
+      i += 1;
+    } else {
+      toto.stop();
+      console.log('stop timer : '+i);
+      data = [];
+      ecoucou.style('opacity',1.0); 
+      anim=0;
+    }
+  }
+  function InitData(x0,y0,l0) {
+    let array = [];
+    for(var j=0;j<nbBalon;j++) { 
+      let d={};
+      d.x = x0;d.y=y0,d.l=l0;d.n=j;d.s=1;
+      d.Vx = 10 - Math.random()*20;
+      d.Vy = 15 - Math.random()*20;
+      d.R = 3 + Math.trunc(Math.random()*4);
+      array.push(d);
+    };
+    return array;
+  }
+function balistique(t,Vx,Vy) {
+  const g=9.81;
+  let x = Vx*t, y=-1/2*g*t*t + Vy*t;
+  return [x,y];
+}
+  function click() {
+//    anim.dessine(g,anim.couleur[Math.trunc(Math.random()*5)]);
+	cycle();
+    }
+
+function anime() {
+	cpt += 1;
+	let seq = Math.round(cpt/10);
+	cycle();
+	switch (seq) {
+		case 0:
+			if (sequence[seq]==0) {	
+				console.log(seq);
+				d3.select('#jour').transition()
+					.duration(4000).remove();
+				sequence[seq]=1;
+			}
+			break;
+		case 1:
+			if (sequence[seq]==0) {	
+				console.log(seq);
+				a43();
+				sequence[seq]=1;
+			}
+			break;
+		case 2:
+			if (sequence[seq]==0) {	
+				console.log(seq);
+				d3.select('#Anim03').selectAll('circle')
+					.transition().duration(3000).style('fill','yellow');
+				d3.select('#Anim40').selectAll('circle')
+					.transition().duration(3000).style('fill','yellow');
+				sequence[seq]=1;
+			}
+			break;
+		case 3:
+			if (sequence[seq]==0) {	
+				console.log(seq);
+				d3.select('#Anim03').selectAll('circle')
+					.transition().duration(4000).attr('r',20).style('fill','black');
+				sequence[seq]=1;
+			}
+			break;
+		case 4:
+			if (sequence[seq]==0) {	
+				console.log(seq);
+				d3.select('#Anim03').remove();
+				c04();
+				sequence[seq]=1;
+			}
+			break;
+		case 5:
+			if (sequence[seq]==0) {	
+				console.log(seq);
+				d3.select('#Anim04').selectAll('circle')
+					.transition().duration(5000).attr('r',10).style('fill','red');
+				d3.select('#Anim40').selectAll('circle')
+					.transition().duration(5000).attr('r',10).style('fill','red');
+				sequence[seq]=1;
+			}
+			break;
+		case 6:
+			if (sequence[seq]==0) {	
+				console.log(seq);
+				d3.select('#Anim04').selectAll('circle')
+					.transition().duration(3000).style('fill','black').remove();
+				d3.select('#Anim40').selectAll('circle')
+					.transition().duration(3000).style('fill','black').remove();
+				HB();
+				sequence[seq]=1;
+			}
+			break;
+		case 7:
+			cycle();
+			break;
+		default :
+			console.log('stop');
+			timer.stop();
+			ademain.style('opacity',1.0);
+	}
+}
 </script>
 </body>
 </html>
