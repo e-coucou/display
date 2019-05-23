@@ -134,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Mai, 2019<br><br> | v 3.00</aside>
+  <aside >Mai, 2019<br><br> | v 3.01</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -2249,7 +2249,7 @@ function Dashboard() {
 		//epxxx
 		// nouvelle représentation
 		
-		const inter = 50
+		const inter = (width-margin.left-margin.right)/20; //epxxx
 		let nDashG = graph.append('g')
 			.attr('transform', 'translate(' + margin.left+ ',' + (margin.top) + ')') //epxxx enlever 500
 			.attr('width', w).attr('height', 300);
@@ -2258,10 +2258,14 @@ function Dashboard() {
 //		article.append('circle').attr('cx',100).attr('cy',100).attr('r',35).style('fill','white').style('stroke','blue').style('stroke-width',3);
 //		article.append('line').attr('x1',100+30*Math.sin(Math.PI/4)).attr('y1',100-30*Math.cos(Math.PI/4)).attr('x2',100-30*Math.sin(Math.PI/4)).attr('y2',100+30*Math.cos(Math.PI/4)).style('stroke','red').style('stroke-width',3);
         article.append('rect').attr('width',2*(inter-1)).attr('height',2*inter).style('fill','#ccf').style('opacity',0.7);
-		article.append('circle').attr('cx',inter).attr('cy',inter).attr('r',inter/8).style('fill',(d)=>{return d.nowp>10.0?'blue':'red';}).style('stroke','blue').style('stroke-width',1);
+		article.append('circle').attr('cx',inter).attr('cy',inter).attr('r',inter/6).style('fill',(d)=>{return d.nowp>10.0?'blue':'red';})
+			.style('stroke','blue').style('stroke-width',1);
 		article.append('text').text((d,i)=> {return listeDashboard[i].unité;})
             .attr('dx',inter).attr('dy',1.8*inter)
             .style('text-anchor','middle').style('fill','blue');
+        article.append('text').style('text-anchor','middle')
+            .attr('dx',inter).attr('dy',inter*1.6).style('fill','black')
+            .text(d=> {return d.nowp.toFixed(0) + '% ['+d.hierp.toFixed(0)+']'});
 
         article.call(testAdd);
         let xScale = d3.scaleLinear()
