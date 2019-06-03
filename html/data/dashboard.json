@@ -1,14 +1,14 @@
 [
-{"unité":"CS2 A","tag":"3B_FC21037","cmj":8000},
-{"unité":"CS2 B","tag":"3B_FC22537","cmj":8000},
-{"unité":"MSH A","tag":"A_FCQXS20501","cmj":6000},
-{"unité":"MSH B","tag":"A_FCQXS21501","cmj":6000},
-{"unité":"Samourai","tag":"S-FC16325","cmj":7400},
-{"unité":"Europe 2","tag":"E-FC16325","cmj":8600},
-{"unité":"Distillation","tag":"B-FC23008","cmj":33000},
-{"unité":"MMP S1","tag":"B-FQ63017","cmj":15000},
-{"unité":"MMP E2","tag":"E-FQ41504","cmj":16000},
-{"unité":"MMP Pur","tag":"B-FQ34021","cmj":30000},
-{"unité":"HCN A","tag":"N-F82139","cmj":1700},
-{"unité":"HCN B","tag":"N-F82539","cmj":1700}
+{"unité":"CS2 A","tag":"3B-FC21037","cmj":9100,"l":0,"c":0},
+{"unité":"CS2 B","tag":"3B-FC22537","cmj":9100,"l":0,"c":1},
+{"unité":"MSH A","tag":"A_FCQXS20501","cmj":6000,"l":0,"c":2},
+{"unité":"MSH B","tag":"A_FCQXS21501","cmj":6000,"l":0,"c":3},
+{"unité":"Samourai","tag":"S-FC16325","cmj":7400,"l":1,"c":0},
+{"unité":"Europe 2","tag":"E-FC16325","cmj":8600,"l":1,"c":1},
+{"unité":"Distillation","tag":"B-FC23008","cmj":33000,"l":1,"c":2},
+{"unité":"MMP Pur","tag":"B-FQ34021","cmj":30000,"l":1,"c":3},
+{"unité":"HCN A","tag":"N-F82139","cmj":1700,"l":2,"c":0},
+{"unité":"HCN B","tag":"N-F82539","cmj":1700,"l":2,"c":1},
+{"unité":"MMP S1","tag":"B-FQ63017","cmj":15000,"l":1,"c":4},
+{"unité":"MMP E2","tag":"E-FQ41504","cmj":16000,"l":1,"c":5}
 ]

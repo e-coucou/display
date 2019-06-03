@@ -134,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Mai, 2019<br><br> | v 3.01</aside>
+  <aside >Mai, 2019<br><br> | v 3.05</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -2201,19 +2201,25 @@ function Dashboard() {
         console.log(dashData);
         let data = [];
         for (i=-1;++i<dashData.hier.length;) {
+            let ii = listeDashboard.filter(a=>{ return a.tag == dashData.now[i].dataReference;});
             data.push({'nom':dashData.now[i].dataReference, 
                 'now':(dashData.now[i].values[0].value),
-                'nowp':(dashData.now[i].values[0].value/listeDashboard[i].cmj)/10,
+                'nowp':(dashData.now[i].values[0].value/ii[0].cmj)/10,
                 'today':averageOI(dashData.today[i].values).toFixed(0),
-                'todayp':averageOI(dashData.today[i].values).toFixed(0)/listeDashboard[i].cmj/10,
+                'todayp':averageOI(dashData.today[i].values).toFixed(0)/ii[0].cmj/10,
                 'hier':averageOI(dashData.hier[i].values),
-                'hierp':averageOI(dashData.hier[i].values)/listeDashboard[i].cmj/10,
-                'cmj':listeDashboard[i].cmj,
-                'mois':dashData.mois[i].values
+                'hierp':averageOI(dashData.hier[i].values)/ii[0].cmj/10,
+//                'cmj':listeDashboard[i].cmj,
+                'mois':dashData.mois[i].values,
+                'jour':dashData.today[i].values
                 });
-            data[i].mois[0]['div']=listeDashboard[i].cmj*10;
+//            console.log(i,ii);
+            data[i].mois[0]['div']=ii[0].cmj*10;
+            data[i].jour[0]['div']=ii[0].cmj*10;
+            data[i]['c']=ii[0].c;
+            data[i]['l']=ii[0].l;
         }
-        console.log(data);
+        console.log('data',data);
         doGraphe(5);
 		var w = (width-margin.left-margin.right), h = window.innerHeight - margin.top - margin.bottom; // on test ...
 		// on ajuste le svg
@@ -2246,25 +2252,28 @@ function Dashboard() {
             .attr('r',4);
 */
 		//----------
-		//epxxx
 		// nouvelle représentation
 		
-		const inter = (width-margin.left-margin.right)/20; //epxxx
+		const inter = Math.min((height-margin.top-margin.bottom)/6,(width-margin.left-margin.right)/12), marge=16, centre=marge+inter;
+        const c = ['#1E90FF','#ff7f50'];
 		let nDashG = graph.append('g')
 			.attr('transform', 'translate(' + margin.left+ ',' + (margin.top) + ')') //epxxx enlever 500
-			.attr('width', w).attr('height', 300);
+			.attr('width', w).attr('height', 350);
 		let article = nDashG.selectAll('g').data(data).enter().append('g')
-			.attr('transform',(d,i)=>{return 'translate('+(i*inter*2)+','+0+')'});
+			.attr('transform',(d,i)=>{return 'translate('+(d.c*(centre)*2.1)+','+(d.l*(centre)*2.5)+')'});
 //		article.append('circle').attr('cx',100).attr('cy',100).attr('r',35).style('fill','white').style('stroke','blue').style('stroke-width',3);
 //		article.append('line').attr('x1',100+30*Math.sin(Math.PI/4)).attr('y1',100-30*Math.cos(Math.PI/4)).attr('x2',100-30*Math.sin(Math.PI/4)).attr('y2',100+30*Math.cos(Math.PI/4)).style('stroke','red').style('stroke-width',3);
-        article.append('rect').attr('width',2*(inter-1)).attr('height',2*inter).style('fill','#ccf').style('opacity',0.7);
-		article.append('circle').attr('cx',inter).attr('cy',inter).attr('r',inter/6).style('fill',(d)=>{return d.nowp>10.0?'blue':'red';})
-			.style('stroke','blue').style('stroke-width',1);
-		article.append('text').text((d,i)=> {return listeDashboard[i].unité;})
-            .attr('dx',inter).attr('dy',1.8*inter)
+        article.append('rect').attr('width',2*(centre)).attr('height',28).attr('y',-28).style('fill','#87CEFA').style('opacity',0.7);
+        article.append('rect').attr('y',0).attr('width',2*(centre)).attr('height',2*(centre)).style('stroke','#blue')
+            .style('stroke-width',1).style('fill','#fffafa').style('opacity',1);
+		article.append('text').text((d,i)=> {
+                let ii = listeDashboard.filter(a=>{ return a.tag == d.nom;});
+                return ii[0].unité;})
+            .attr('dx',centre).attr('dy',-15) //1.8*inter)
             .style('text-anchor','middle').style('fill','blue');
         article.append('text').style('text-anchor','middle')
-            .attr('dx',inter).attr('dy',inter*1.6).style('fill','black')
+            .attr('dx',centre).attr('dy',-5) //inter*1.6)
+            .style('fill','black')
             .text(d=> {return d.nowp.toFixed(0) + '% ['+d.hierp.toFixed(0)+']'});
 
         article.call(testAdd);
@@ -2272,16 +2281,47 @@ function Dashboard() {
             .domain([0,100.0])
             .range([0, inter]);
         let rScale = d3.scaleLinear()
-            .domain([0,31])
-            .range([Math.PI, 0]);
+            .domain([0,23])
+            .range([0, Math.PI]);
+        let lScale = d3.scaleLinear()
+            .domain([0,30])
+            .range([3/2*Math.PI, Math.PI/2]);
 
-		let histoG = article.selectAll('g').data((d)=>d.mois).enter().append('line');
+		let histoG = article.selectAll('g').data((d)=>d.mois).enter();
 //			.attr('transform',(d,i)=>{return 'translate('+(i*inter*2)+','+0+')'});
 //        histoG.attr('x1',(d,i)=>{return i;}).attr('y1',(d,i,a)=>{return xScale(d.value/100000);}).attr('x2',(d,i)=>{return i+1;}).attr('y2',0).style('stroke','blue').style('stroke-width',1);
-        histoG.attr('x1',inter).attr('y1',inter)
-        .attr('x2',(d,i,a)=>{return inter+xScale(d.value/a[0].__data__.div)*Math.cos(rScale(i));})
-        .attr('y2',(d,i,a)=>{return inter-xScale(d.value/a[0].__data__.div)*Math.sin(rScale(i));})
-        .style('stroke','blue').style('stroke-width',1);
+        histoG.append('line').attr('x1',centre).attr('y1',centre)
+        .attr('x2',(d,i,a)=>{return centre+xScale(d.value/a[0].__data__.div)*Math.cos(lScale(i));})
+        .attr('y2',(d,i,a)=>{return centre-xScale(d.value/a[0].__data__.div)*Math.sin(lScale(i));})
+        .style('stroke',c[0]).style('stroke-width',3);
+        histoG.append('text')
+            .attr('dx',(d,i,a)=>{return centre+(inter+marge/2)*Math.cos(lScale(i));})
+            .attr('dy',(d,i,a)=>{return centre-(inter+marge/2)*Math.sin(lScale(i));})
+            .style('fill',c[0]).style('text-anchor','middle').style('font-size',8).text((d,i)=>(i+1));
+        histoG.append('circle').attr('r',1)
+            .attr('cx',(d,i,a)=>{return centre+(inter)*Math.cos(lScale(i));})
+            .attr('cy',(d,i,a)=>{return centre-(inter)*Math.sin(lScale(i));})
+            .style('fill','#000');
+
+        let histoD = article.selectAll('g').data((d)=>d.jour).enter();
+        histoD.append('line').attr('x1',centre).attr('y1',centre)
+            .attr('x2',(d,i,a)=>{return centre+xScale(d.value/a[0].__data__.div)*Math.cos(rScale(i)-Math.PI/2);})
+            .attr('y2',(d,i,a)=>{return centre-xScale(d.value/a[0].__data__.div)*Math.sin(rScale(i)-Math.PI/2);})
+            .style('stroke',c[1]).style('stroke-width',1);
+        histoD.append('text')
+            .attr('dx',(d,i,a)=>{return centre+(inter+marge/2)*Math.cos(rScale(i)-Math.PI/2);})
+            .attr('dy',(d,i,a)=>{return centre-(inter+marge/2)*Math.sin(rScale(i)-Math.PI/2);})
+            .style('fill',c[1]).style('text-anchor','middle').style('font-size',8).text((d,i)=>(i+1));
+        histoD.append('circle').attr('r',1)
+            .attr('cx',(d,i,a)=>{return centre+(inter)*Math.cos(rScale(i)-Math.PI/2);})
+            .attr('cy',(d,i,a)=>{return centre-(inter)*Math.sin(rScale(i)-Math.PI/2);})
+            .style('fill','#000');
+
+        article.append('circle').attr('cx',centre).attr('cy',centre).attr('r',inter/6)
+            .style('fill',(d)=>{return d.nowp>10.0?'#006400':'#ff4500';})
+            .style('stroke','#556B2F').style('stroke-width',1).raise().style('opacity',1.0);
+
+
 function testAdd(d) {
 //    console.log(d);
 	}
