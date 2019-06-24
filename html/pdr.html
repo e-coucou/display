@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<title>DISPLAY 4.0</title>
+<meta name="description" content="Interactive visualisation Display Data.">
+<meta name="author" content="e-Coucou">
+<html class="rky">
+<meta charset="utf-8">
+<title>Display 4.0</title>
+<style>
+@import url(../css/dsp.css);
+
+#chart {
+	position : relative;
+}
+.entete {
+    position: absolute;
+    height: 30px;
+    margin-top: 12px;
+}
+text {
+  font: 10px sans-serif;
+}
+
+.label {
+    fill: #777;
+}
+.infoG.label {
+    font: 12px "helvetica neue";
+    fill: #191970;
+}
+
+#intervalle {
+    position: absolute;
+    top: 15px;
+    right: 30px;
+}
+#info {
+    position: absolute;
+    bottom: 5px;
+    right: 20px;
+}
+#menu {
+    position: absolute;
+    top: 0px;
+    right: 20px;
+}
+#titre {
+    position: absolute;
+    top: 14px;
+    left: 0px;
+	font-weight: bold;
+	text-anchor: middle;
+    font: 24px "helvetica neue";
+}
+.axis,
+.frame {
+  shape-rendering: crispEdges;
+}
+
+.axis line {
+  stroke: #ddd;
+}
+
+.axis path {
+  display: none;
+}
+
+.cell text {
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.frame {
+  fill: none;
+  stroke: #aaa;
+}
+circle {
+  fill-opacity: .7;
+}
+
+circle.hidden {
+  fill: #ccc !important ;
+}
+
+.extent {
+  fill: #000;
+  fill-opacity: .125;
+  stroke: #fff;
+}
+input#username,
+input#password,
+input#connexion { 
+    border: 1px dotted #ccc;
+    background: white;
+    font-family: monospace;
+    padding: 2% 2%;
+    font-size: 18px;
+    margin: 2% 2% 2% 5%;
+    width : 85%;
+    height: 40%;
+    color: red;
+}
+input:focus { 
+    background-color:#0cf; color: red; outline: none;
+}
+div#label {
+    position:absolute;
+    display: block;
+    font-size: 12px;
+    top:0;
+    padding: 5px 0px;
+    margin: 10px 0px 0px 50px;
+}
+input#from,
+input#to {
+    color: blue;
+    font: 12px "helvetica neue";
+}
+#credentials {
+  left: 30%;
+  top: 100px;
+  margin: 10px;
+  padding: 10px;
+  width: 40%;
+  position: absolute;
+  border: 3px solid #ff7788;
+}
+#loadjson {
+    left: 30%;
+    top: 350px;
+    position: absolute;
+    font-family: monospace;
+    font-size: 14px;
+}
+</style>
+<header>
+  <div id='h1'>PdR 4.0</div>
+  <aside >Juin, 2019<br><br> | v 0.01</aside>
+  <div id='menu'></div>
+</header>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="https://d3js.org/d3.v5.min.js" charset="utf-8"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.9.1/d3-tip.js" charset="utf-8"></script>
+<script defer src="https://use.fontawesome.com/releases/v5.8.1/js/solid.js" integrity="sha384-IA6YnujJIO+z1m4NKyAGvZ9Wmxrd4Px8WFqhFcgRmwLaJaiwijYgApVpo1MV8p77" crossorigin="anonymous"></script>
+<script defer src="https://use.fontawesome.com/releases/v5.8.1/js/fontawesome.js" integrity="sha384-EMmnH+Njn8umuoSMZ3Ae3bC9hDknHKOWL2e9WJD/cN6XLeAN7tr5ZQ0Hx5HDHtkS" crossorigin="anonymous"></script>
+<!--    <script defer src="https://use.fontawesome.com/releases/v5.0.12/js/all.js" integrity="sha384-Voup2lBiiyZYkRto2XWqbzxHXwzcm4A5RfdfG6466bu5LqjwwrjXCMBQBLMWh7qR" crossorigin="anonymous"></script>
+    <body>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/numjs/0.16.0/numjs.js"></script>
+    <script type="text/javascript" src="../js/eCtools.js"></script>
+    <script type="text/javascript" src="../js/arbre.js"></script>
+    <div id="label" class="label">début : <input type="date" id="from" name="trip-from" value="2019-04-10"><br>
+    fin : <input type="date" id="to" name="trip-from" value="2019-04-23"></div>
+    <div id='titre'></div><div id="intervalle"></div>
+<!--    <button id="connectbutton" onclick="start()">Read Data</button>  -->
+    <div id="credentials">
+    <form name="saisie" onSubmit="return credClick()">
+        <input type="text" id="username"><br>
+        <input type="text" id="password">
+<!--        <input name="Submit"  type="submit" id="connexion" value="Connexion" > -->
+    </form></div>
+    <form id="loadjson" method="post" enctype="multipart/form-data">
+    <div>
+        <label for="profile_pic">Sélectionnez le fichier à utiliser :</label><br><br>
+        <input type="file" id="refJson" name="refJson" accept=".json"><br><br>
+        Le format du fichier<br>[{nom:'variable_1',select:0/1/2/3},<br>{nom:'variable_2',select:2},<br>{...},{}]<br>
+        select : 0(non affiché), 1(cumulé), 2(variable simple), 3(quotient)
+    </div>
+    </form>
+    <div id="chart"></div>
+<footer>
+<aside>(c) e-Coucou | y2kJ | Mars, 2019</aside>
+    <div id="info"></div>
+</footer>
+<script type="text/javascript">
+// Variables Globales
+</script>
+</body>
+</html>
