@@ -86,19 +86,7 @@ circle.hidden {
   fill-opacity: .125;
   stroke: #fff;
 }
-input#username,
-input#password,
-input#connexion { 
-    border: 1px dotted #ccc;
-    background: white;
-    font-family: monospace;
-    padding: 2% 2%;
-    font-size: 18px;
-    margin: 2% 2% 2% 5%;
-    width : 85%;
-    height: 40%;
-    color: red;
-}
+
 input:focus { 
     background-color:#0cf; color: red; outline: none;
 }
@@ -138,9 +126,15 @@ input#to {
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
-	<script src="https://d3js.org/d3.v5.min.js" charset="utf-8"></script>
+<!--	<script src="https://d3js.org/d3.v5.min.js" charset="utf-8"></script> -->
+	<script src="https://unpkg.com/d3@5.7.0/dist/d3.min.js" charset="utf-8"></script>
+	<script src="https://unpkg.com/d3-array@1"></script>
+	<script src="https://unpkg.com/d3-collection@1"></script>
+	<script src="https://unpkg.com/d3-path@1"></script>
+	<script src="https://unpkg.com/d3-shape@1"></script>
+	<script src="https://unpkg.com/d3-sankey@0"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.9.1/d3-tip.js" charset="utf-8"></script>
-<script defer src="https://use.fontawesome.com/releases/v5.8.1/js/solid.js" integrity="sha384-IA6YnujJIO+z1m4NKyAGvZ9Wmxrd4Px8WFqhFcgRmwLaJaiwijYgApVpo1MV8p77" crossorigin="anonymous"></script>
+	<script defer src="https://use.fontawesome.com/releases/v5.8.1/js/solid.js" integrity="sha384-IA6YnujJIO+z1m4NKyAGvZ9Wmxrd4Px8WFqhFcgRmwLaJaiwijYgApVpo1MV8p77" crossorigin="anonymous"></script>
 <script defer src="https://use.fontawesome.com/releases/v5.8.1/js/fontawesome.js" integrity="sha384-EMmnH+Njn8umuoSMZ3Ae3bC9hDknHKOWL2e9WJD/cN6XLeAN7tr5ZQ0Hx5HDHtkS" crossorigin="anonymous"></script>
 <!--    <script defer src="https://use.fontawesome.com/releases/v5.0.12/js/all.js" integrity="sha384-Voup2lBiiyZYkRto2XWqbzxHXwzcm4A5RfdfG6466bu5LqjwwrjXCMBQBLMWh7qR" crossorigin="anonymous"></script>
     <body>-->
@@ -148,24 +142,6 @@ input#to {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/numjs/0.16.0/numjs.js"></script>
     <script type="text/javascript" src="../js/eCtools.js"></script>
     <script type="text/javascript" src="../js/arbre.js"></script>
-    <div id="label" class="label">début : <input type="date" id="from" name="trip-from" value="2019-04-10"><br>
-    fin : <input type="date" id="to" name="trip-from" value="2019-04-23"></div>
-    <div id='titre'></div><div id="intervalle"></div>
-<!--    <button id="connectbutton" onclick="start()">Read Data</button>  -->
-    <div id="credentials">
-    <form name="saisie" onSubmit="return credClick()">
-        <input type="text" id="username"><br>
-        <input type="text" id="password">
-<!--        <input name="Submit"  type="submit" id="connexion" value="Connexion" > -->
-    </form></div>
-    <form id="loadjson" method="post" enctype="multipart/form-data">
-    <div>
-        <label for="profile_pic">Sélectionnez le fichier à utiliser :</label><br><br>
-        <input type="file" id="refJson" name="refJson" accept=".json"><br><br>
-        Le format du fichier<br>[{nom:'variable_1',select:0/1/2/3},<br>{nom:'variable_2',select:2},<br>{...},{}]<br>
-        select : 0(non affiché), 1(cumulé), 2(variable simple), 3(quotient)
-    </div>
-    </form>
     <div id="chart"></div>
 <footer>
 <aside>(c) e-Coucou | y2kJ | Mars, 2019</aside>
@@ -173,6 +149,111 @@ input#to {
 </footer>
 <script type="text/javascript">
 // Variables Globales
+const margin = ({ left : 10, right : 10, top : 10, bottom : 10, padding : 2 }), height = 1850, width = 964;
+var data = ({"nodes": [{"nom": "SULFATE DE SODIUM RC", "type": "MP", "cout": -0.0}, {"nom": "TELA RH/PT CATALIZAD", "type": "MP", "cout": 231.114275295945}, {"nom": "CP/DIVERS", "type": "MP", "cout": 3076.4522344473}, {"nom": "FRIGORIES ELYO", "type": "MP", "cout": 120.7987674853917}, {"nom": "CARBOXYMETHYLCELLULOSE", "type": "MP", "cout": 130.38750688275}, {"nom": "ANHYDRIDE CARBONIQUE RON", "type": "MP", "cout": 846.2112000000001}, {"nom": "ANHYDRIDE CARBONIQUE (CO2", "type": "MP", "cout": 50.98503019499999}, {"nom": "EAU DE JAVEL VRAC", "type": "MP", "cout": 20.59529031326165}, {"nom": "SULFATE D'ALUMINIUM", "type": "MP", "cout": 28.462507425}, {"nom": "HCN (Acide cyanhydrique)", "type": "PI", "cout": 15959.526893216844}, {"nom": "Vapeur sp 40b", "type": "MP", "cout": -3351.6409505854153}, {"nom": "TRANSPORTE SULFURICO", "type": "MP", "cout": 961.9833103967999}, {"nom": "Gaz procédé Ron", "type": "MP", "cout": 5977.08769908142}, {"nom": "METAL RHODIUM", "type": "MP", "cout": 24.300421167}, {"nom": "Sel / CHLORURE DE SODIUM", "type": "MP", "cout": 3.2100255676500007}, {"nom": "HYDROGENE", "type": "MP", "cout": 0.8709884728890959}, {"nom": "PEROXIDO DE HIDROGENO 50%", "type": "MP", "cout": 273.9981296474634}, {"nom": "CARBOXYMETHYLCELLULOSE", "type": "MP", "cout": 212.73746547375004}, {"nom": "Traitement eau", "type": "MP", "cout": 28.340722135807564}, {"nom": "EAU 26", "type": "MP", "cout": 287.5922091}, {"nom": "Electricité distribuée", "type": "MP", "cout": 738.37351395}, {"nom": "AIR COMPRIME", "type": "MP", "cout": 61.661268225}, {"nom": "EAU FILTREE B12", "type": "MP", "cout": 115.671269754}, {"nom": "METAL PLATINE", "type": "MP", "cout": 106.314342605625}, {"nom": "VAPEUR 6B TURBO(434572)", "type": "MP", "cout": 2377.099222079603}, {"nom": "EAU FILTREE B2", "type": "MP", "cout": 33.07950472500001}, {"nom": "EAU DEMINERALISEE", "type": "MP", "cout": 136.453896960975}, {"nom": "Traitement PEB (DCO + NTK", "type": "MP", "cout": 770.00190730848}, {"nom": "Eau déminéralisée", "type": "MP", "cout": 98.96396544366604}, {"nom": "AIR COMPRIME", "type": "MP", "cout": 22.215308389041656}, {"nom": "ACRYLEX  EC3216A Dispersa", "type": "MP", "cout": 197.10049786970131}, {"nom": "GAS BP", "type": "MP", "cout": 4616.422392185999}, {"nom": "ELECTRICITE SECOURS", "type": "MP", "cout": 1258.2647498428034}, {"nom": "EAU DEGAZEE", "type": "MP", "cout": 613.9595806243528}, {"nom": "EAU DEMINEE", "type": "MP", "cout": 39.391020092486556}, {"nom": "GAZ COMBUSTION", "type": "MP", "cout": 3616.627515948139}, {"nom": "EAU INDUSTRIELLE", "type": "MP", "cout": 115.6809673174867}, {"nom": "ELECTRICITE EDF", "type": "MP", "cout": 3347.077564942571}, {"nom": "sulfure de carbone/ hydro", "type": "MP", "cout": 10551.57620789192}, {"nom": "MMP-S2", "type": "PI", "cout": 65349.46606390922}, {"nom": "MMP-S", "type": "PI", "cout": 55300.39897234352}, {"nom": "HYPOCHLORITE DE SODIUM", "type": "MP", "cout": 7.680001036799999}, {"nom": "SULFURIQUE BILBAO", "type": "PI", "cout": 12809.567238441598}, {"nom": "SULFURICO BURGOS", "type": "PI", "cout": 13771.550548838399}, {"nom": "AZOTE", "type": "MP", "cout": 211.76098724880003}, {"nom": "ACIDE PHOSPHORIQUE", "type": "MP", "cout": 0.8100199395}, {"nom": "ELECTRICIDAD", "type": "MP", "cout": 2373.1188157273405}, {"nom": "ACIDE SULFURIQUE 98%", "type": "MP", "cout": 12151.368131327998}, {"nom": "AMMONIAC", "type": "MP", "cout": 24374.93453291911}, {"nom": "ACIDE SULFURIQUE 96% VRAC", "type": "MP", "cout": 822.4348921559424}, {"nom": "AT88 (produit intermediai", "type": "PF", "cout": 104861.02194105134}, {"nom": "FRIGORIES ELYO fixe", "type": "MP", "cout": 172.827937020678}, {"nom": "Traitement des E M S", "type": "MP", "cout": 251.96332888395006}, {"nom": "Exped. Roc Burgos", "type": "MP", "cout": 783.6}, {"nom": "AGUA", "type": "MP", "cout": 348.43542580840716}, {"nom": "AMMONIAQUE SOLUTION", "type": "MP", "cout": 0.0}, {"nom": "HUILE BLANCHE STANDARD", "type": "MP", "cout": 0.56252066355}, {"nom": "PRESTACION TEPSA", "type": "MP", "cout": 658.1991071135999}, {"nom": "Divers CP", "type": "MP", "cout": 234.45}, {"nom": "Dest déchets AMTP Di", "type": "MP", "cout": 1.343083950024486e-05}, {"nom": "Hydrogène sulfuré", "type": "PI", "cout": 10551.57620789192}, {"nom": "Couts annexes", "type": "MP", "cout": 0.0}, {"nom": "Vapeur sp 6b", "type": "MP", "cout": -0.0}, {"nom": "Catalyseur HCN", "type": "MP", "cout": 156.30030408605978}, {"nom": "LESSIVE DE SOUDE 50%", "type": "MP", "cout": 34461.68295943239}, {"nom": "ACIDE SULFURIQUE 96%", "type": "MP", "cout": 980.5827599999999}, {"nom": "Condensats exp CP", "type": "MP", "cout": 0.0}, {"nom": "PROPANE", "type": "MP", "cout": 0.0}, {"nom": "Air comprimé", "type": "MP", "cout": 217.10782188387068}, {"nom": "GAZ METHANE", "type": "MP", "cout": 61.922264625}, {"nom": "HMTBN 97%", "type": "PI", "cout": 25741.59284221828}, {"nom": "AZOTE ROC", "type": "MP", "cout": 126.21787213886199}, {"nom": "MSH Production", "type": "PI", "cout": 34975.348772537815}, {"nom": "MMP DISTILLE", "type": "PI", "cout": 121504.17541593302}, {"nom": "ACIDE CYANHYDRIQUE", "type": "PI", "cout": 9116.604798764773}, {"nom": "CYANURE DE SODIUM STOCK", "type": "MP", "cout": 0.0029481075}, {"nom": "HMTB", "type": "PI", "cout": 68325.31192502355}, {"nom": "DL METHIONINE R. FAB RON", "type": "PF", "cout": 71870.9049028052}, {"nom": "DL METHIONINE R. FAB CTY", "type": "PF", "cout": 46829.19114261208}, {"nom": "Traitement eau", "type": "MP", "cout": 26.917889604767883}, {"nom": "Stockage Eaux Mères Secon", "type": "MP", "cout": -0.00013775804999999997}, {"nom": "Stockage Eaux Ammoniacale", "type": "MP", "cout": -4.0499999999999985e-06}, {"nom": "FRIGORIES ELYO", "type": "MP", "cout": 171.90122370733712}, {"nom": "HYDROGENE", "type": "MP", "cout": 2.3328217109875333}, {"nom": "GLYCERINE", "type": "MP", "cout": 0.8640176328}, {"nom": "TRAITEMENT CHARBON ACTIF", "type": "MP", "cout": 149.98503019500004}, {"nom": "Traitement eau", "type": "MP", "cout": 66.03484958634981}, {"nom": "FRIGORIES ELYO fixe", "type": "MP", "cout": 598.4714201120283}, {"nom": "ACIDE CITRIQUE", "type": "MP", "cout": 244.68314856737942}, {"nom": "Destruction Aqueris", "type": "MP", "cout": 3751.915134225}, {"nom": "Metal Platine", "type": "MP", "cout": 104.95872893839791}, {"nom": "Metal Rhodium", "type": "MP", "cout": 9.727616229585198}, {"nom": "Condensats exportés", "type": "MP", "cout": -442.0257293600847}, {"nom": "DI-ETHYL GLYCOL", "type": "MP", "cout": 0.0}, {"nom": "Traitement eau", "type": "MP", "cout": 17.71601378500251}, {"nom": "ANTIMOUSSE", "type": "MP", "cout": 55.349972946}, {"nom": "Azote Ron", "type": "MP", "cout": 375.5660515366644}, {"nom": "Eau brute Ron", "type": "MP", "cout": 148.50129806935502}, {"nom": "Gaz ferme Ron", "type": "MP", "cout": 309.91253942165014}, {"nom": "EAU OXYGENEE RON", "type": "MP", "cout": 2.3625101789999996}, {"nom": "EAU DE JAVEL", "type": "MP", "cout": 215.1}, {"nom": "METHANOL ROC", "type": "MP", "cout": 19512.18910117125}, {"nom": "GAS HP", "type": "MP", "cout": 7743.762303815993}, {"nom": "N METHYLMORPHOLINE", "type": "MP", "cout": 200.10231707908812}, {"nom": "ACIDE ACETIQUE 80%", "type": "MP", "cout": 22.135477955641576}, {"nom": "Divers CP", "type": "MP", "cout": 9.25638938530389}, {"nom": "Divers effluents", "type": "MP", "cout": 46.46340845803762}, {"nom": "Divers effluents", "type": "MP", "cout": 187.800015}, {"nom": "AZOTE GAZ", "type": "MP", "cout": 317.16717795}, {"nom": "CHARBON ACTIF", "type": "MP", "cout": 311.964779908125}, {"nom": "CHARBON ACTIF RON", "type": "MP", "cout": 509.8500086625}, {"nom": "ACIDE CITRIQUE", "type": "MP", "cout": 74.25600742559999}, {"nom": "SULFATE AMMONIUM FIN", "type": "MP", "cout": -1.0133895}, {"nom": "SULFATE AMMONIUM GROSSO", "type": "MP", "cout": -0.28582799999999997}, {"nom": "MSH Achat", "type": "MP", "cout": 3162.4810332011425}, {"nom": "CYANURE DE SODIUM SOUS PR", "type": "MP", "cout": 0.0}, {"nom": "ACRYLEX  EC3434A", "type": "MP", "cout": 262.5428560951768}, {"nom": "Force motrice Ron", "type": "MP", "cout": 2221.51110104829}, {"nom": "HYDROQUINONE", "type": "MP", "cout": 74.21403399120491}, {"nom": "DIVERSOS CP", "type": "MP", "cout": 79.83382619937001}, {"nom": "Destructeur d'odeur RON", "type": "MP", "cout": 30.000000000000004}, {"nom": "Vapeur sous-prod hcn", "type": "MP", "cout": -7657.062709721699}, {"nom": "GAS HP RECUPERADO", "type": "MP", "cout": -4309.295669343001}, {"nom": "EAU POTABLE", "type": "MP", "cout": 0.0}, {"nom": "Condensats exp CP", "type": "MP", "cout": 0.0}, {"nom": "PROPYLENE", "type": "MP", "cout": 78602.28013757226}, {"nom": "Entretien Wgs burgos", "type": "MP", "cout": 186.3}, {"nom": "SULFATE D'ALUMINIUM", "type": "MP", "cout": 18.629994514499998}, {"nom": "EAU DE JAVEL GRV", "type": "MP", "cout": 10.37704611158111}, {"nom": "Acide Sulfurique", "type": "MP", "cout": 0.0}, {"nom": "EAU de CHAUDIERE (EDC)", "type": "MP", "cout": 0.0}], "links": [{"source": 24, "target": 70, "value": 242.45501417460002}, {"source": 64, "target": 70, "value": 190316.45399308603}, {"source": 76, "target": 70, "value": 25551033.93321102}, {"source": 126, "target": 50, "value": 186300.0}, {"source": 53, "target": 50, "value": 783600.0}, {"source": 48, "target": 50, "value": 6018011.9845692}, {"source": 111, "target": 50, "value": 74256.0074256}, {"source": 45, "target": 50, "value": 810.0199395}, {"source": 44, "target": 50, "value": 211760.98724880003}, {"source": 41, "target": 50, "value": 7680.001036799999}, {"source": 14, "target": 50, "value": 3210.0255676500005}, {"source": 64, "target": 50, "value": 324700.8128736}, {"source": 73, "target": 50, "value": 62540151.43824164}, {"source": 43, "target": 50, "value": 12308788.799999999}, {"source": 50, "target": 112, "value": 1013.3895}, {"source": 50, "target": 113, "value": 285.828}, {"source": 9, "target": 50, "value": 15959526.893216845}, {"source": 54, "target": 50, "value": 321320.09716614}, {"source": 46, "target": 50, "value": 1425947.8728802018}, {"source": 31, "target": 50, "value": 4616422.392185999}, {"source": 119, "target": 50, "value": 79833.82619937001}, {"source": 114, "target": 72, "value": 3162481.0332011427}, {"source": 94, "target": 72, "value": 17716.01378500251}, {"source": 72, "target": 92, "value": 247760.84438491295}, {"source": 71, "target": 72, "value": 17365.20680706258}, {"source": 7, "target": 72, "value": 7147.797408261647}, {"source": 128, "target": 72, "value": 447.2840393436282}, {"source": 101, "target": 72, "value": 19499231.22534354}, {"source": 60, "target": 72, "value": 10551576.20789192}, {"source": 35, "target": 72, "value": 549087.9521289717}, {"source": 36, "target": 72, "value": 55250.200560776255}, {"source": 37, "target": 72, "value": 410650.5984060292}, {"source": 32, "target": 72, "value": 230994.79106637684}, {"source": 24, "target": 72, "value": 681663.4342024602}, {"source": 33, "target": 72, "value": 39497.87208184002}, {"source": 24, "target": 72, "value": 681663.4342024602}, {"source": 105, "target": 73, "value": 9256.38938530389}, {"source": 106, "target": 73, "value": 46463.40845803762}, {"source": 118, "target": 73, "value": 28041.420249464354}, {"source": 71, "target": 73, "value": 20364.052636566492}, {"source": 101, "target": 73, "value": 12957.875827711317}, {"source": 40, "target": 73, "value": 55300398.97234352}, {"source": 39, "target": 73, "value": 65349466.06390922}, {"source": 35, "target": 73, "value": 36193.71699396585}, {"source": 36, "target": 73, "value": 45042.2270802845}, {"source": 37, "target": 73, "value": 116850.81414646463}, {"source": 32, "target": 73, "value": 74360.84176641903}, {"source": 29, "target": 73, "value": 22215.308389041656}, {"source": 24, "target": 73, "value": 442564.3113161766}, {"source": 59, "target": 73, "value": 0.01343083950024486}, {"source": 28, "target": 74, "value": 84564.18373326604}, {"source": 68, "target": 74, "value": 22114.64688387069}, {"source": 96, "target": 74, "value": 23816.77569098948}, {"source": 24, "target": 74, "value": 499.95686508985807}, {"source": 74, "target": 121, "value": 7657062.709721699}, {"source": 86, "target": 74, "value": 16159.797086349818}, {"source": 63, "target": 74, "value": 156300.30408605977}, {"source": 83, "target": 74, "value": 2332.821710987533}, {"source": 64, "target": 74, "value": 744686.4361877269}, {"source": 13, "target": 74, "value": 24300.421167}, {"source": 23, "target": 74, "value": 106314.342605625}, {"source": 48, "target": 74, "value": 8889580.048518144}, {"source": 98, "target": 74, "value": 309912.5394216501}, {"source": 117, "target": 74, "value": 415997.53544829047}, {"source": 12, "target": 74, "value": 5977087.69908142}, {"source": 88, "target": 76, "value": 244683.14856737942}, {"source": 73, "target": 76, "value": 58964023.97769139}, {"source": 74, "target": 76, "value": 9116604.798764773}, {"source": 39, "target": 10, "value": 3351640.950585415}, {"source": 87, "target": 39, "value": 598471.4201120284}, {"source": 18, "target": 39, "value": 28340.722135807562}, {"source": 104, "target": 39, "value": 12542.294290479915}, {"source": 39, "target": 92, "value": 194253.6636873728}, {"source": 30, "target": 39, "value": 101302.98540750003}, {"source": 116, "target": 39, "value": 133412.42619128898}, {"source": 125, "target": 39, "value": 43088233.765422575}, {"source": 118, "target": 39, "value": 28466.341237644578}, {"source": 103, "target": 39, "value": 114568.83609197522}, {"source": 71, "target": 39, "value": 49746.98482023352}, {"source": 128, "target": 39, "value": 854.2381158209807}, {"source": 72, "target": 39, "value": 18997094.814748064}, {"source": 35, "target": 39, "value": 1572999.9834164735}, {"source": 36, "target": 39, "value": 8825.19977714751}, {"source": 37, "target": 39, "value": 1199939.7357338911}, {"source": 32, "target": 39, "value": 952909.1170100075}, {"source": 33, "target": 39, "value": 574461.7085425127}, {"source": 34, "target": 39, "value": 20689.284707375373}, {"source": 24, "target": 39, "value": 1240599.596713841}, {"source": 82, "target": 39, "value": 171901.22370733714}, {"source": 28, "target": 77, "value": 14399.781710400002}, {"source": 68, "target": 77, "value": 194993.17500000002}, {"source": 58, "target": 77, "value": 234450.0}, {"source": 96, "target": 77, "value": 351749.275845675}, {"source": 24, "target": 77, "value": 2882.646}, {"source": 107, "target": 77, "value": 187800.015}, {"source": 86, "target": 77, "value": 49875.0525}, {"source": 120, "target": 77, "value": 30000.000000000004}, {"source": 5, "target": 77, "value": 846211.2000000001}, {"source": 64, "target": 77, "value": 20685375.820125002}, {"source": 8, "target": 77, "value": 28462.507425}, {"source": 7, "target": 77, "value": 13447.492905}, {"source": 128, "target": 77, "value": 7649.971289999999}, {"source": 99, "target": 77, "value": 2362.5101789999994}, {"source": 110, "target": 77, "value": 509850.0086625}, {"source": 17, "target": 77, "value": 212737.46547375002}, {"source": 95, "target": 77, "value": 18449.990982}, {"source": 76, "target": 77, "value": 42774277.99181251}, {"source": 97, "target": 77, "value": 148501.29806935502}, {"source": 117, "target": 77, "value": 1805513.5655999999}, {"source": 89, "target": 77, "value": 3751915.134225}, {"source": 2, "target": 78, "value": 3076452.2344473}, {"source": 6, "target": 78, "value": 50985.03019499999}, {"source": 65, "target": 78, "value": 980582.7599999999}, {"source": 64, "target": 78, "value": 12516603.436252981}, {"source": 100, "target": 78, "value": 215100.0}, {"source": 127, "target": 78, "value": 18629.9945145}, {"source": 84, "target": 78, "value": 864.0176328}, {"source": 109, "target": 78, "value": 311964.779908125}, {"source": 4, "target": 78, "value": 130387.50688274999}, {"source": 85, "target": 78, "value": 149985.03019500003}, {"source": 69, "target": 78, "value": 61922.264624999996}, {"source": 56, "target": 78, "value": 562.52066355}, {"source": 95, "target": 78, "value": 36899.981964}, {"source": 49, "target": 78, "value": 822434.8921559424}, {"source": 75, "target": 78, "value": 2.9481075}, {"source": 70, "target": 78, "value": 25741592.84221828}, {"source": 24, "target": 78, "value": 2256.9678}, {"source": 25, "target": 78, "value": 33079.504725000006}, {"source": 26, "target": 78, "value": 136453.896960975}, {"source": 19, "target": 78, "value": 287592.2091}, {"source": 20, "target": 78, "value": 738373.5139499999}, {"source": 21, "target": 78, "value": 61661.268225}, {"source": 22, "target": 78, "value": 115671.269754}, {"source": 27, "target": 78, "value": 770001.90730848}, {"source": 108, "target": 78, "value": 317167.17795}, {"source": 52, "target": 78, "value": 251963.32888395005}, {"source": 78, "target": 80, "value": 0.13775804999999997}, {"source": 78, "target": 81, "value": 0.004049999999999999}, {"source": 47, "target": 42, "value": 12151368.131327998}, {"source": 57, "target": 42, "value": 658199.1071135999}, {"source": 42, "target": 43, "value": 12809567.2384416}, {"source": 11, "target": 43, "value": 961983.3103967999}, {"source": 51, "target": 40, "value": 172827.93702067801}, {"source": 79, "target": 40, "value": 26917.889604767883}, {"source": 104, "target": 40, "value": 9593.183665161665}, {"source": 40, "target": 92, "value": 11.221287798935492}, {"source": 30, "target": 40, "value": 95797.51246220131}, {"source": 116, "target": 40, "value": 129130.4299038878}, {"source": 125, "target": 40, "value": 35514046.37214968}, {"source": 118, "target": 40, "value": 17706.272504095978}, {"source": 103, "target": 40, "value": 85533.4809871129}, {"source": 71, "target": 40, "value": 38741.6278749994}, {"source": 128, "target": 40, "value": 1425.5526664165022}, {"source": 72, "target": 40, "value": 15978253.957789754}, {"source": 35, "target": 40, "value": 1458345.8634087278}, {"source": 36, "target": 40, "value": 6563.339899278431}, {"source": 37, "target": 40, "value": 1619636.4166561856}, {"source": 34, "target": 40, "value": 18701.735385111184}, {"source": 24, "target": 40, "value": 6389.854167860787}, {"source": 3, "target": 40, "value": 120798.76748539171}, {"source": 48, "target": 9, "value": 9467342.499831764}, {"source": 15, "target": 9, "value": 870.9884728890959}, {"source": 16, "target": 9, "value": 273998.1296474634}, {"source": 90, "target": 9, "value": 104958.72893839791}, {"source": 91, "target": 9, "value": 9727.6162295852}, {"source": 43, "target": 9, "value": 1462761.7488384002}, {"source": 54, "target": 9, "value": 27115.328642267163}, {"source": 46, "target": 9, "value": 947170.942847139}, {"source": 102, "target": 9, "value": 7743762.303815993}, {"source": 9, "target": 122, "value": 4309295.669343}, {"source": 1, "target": 9, "value": 231114.275295945}, {"source": 38, "target": 60, "value": 10551576.20789192}]});
+const couleur = d3.scaleOrdinal(d3.schemeCategory10);
+const f = d3.format(",.1f");
+
+var svg = d3.select("#chart").style('top','57px')
+    .append("svg")
+	.attr('class','svg-contenair')
+//	.attr("preserveAspectRatio", "xMinYMin meet")
+	.attr("viewBox", "0 0 "+(width + margin.left + margin.right)+" "+(height + margin.top + margin.bottom))
+    .attr("position", 2)
+	.classed("svg-content", true);
+
+/*  let svg = d3.select(DOM.svg(width, height))
+      .style("width", "100%")
+      .style("height", "auto");
+*/  
+ // svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+ 
+
+//  const {nodes, links} = sankey(data);
+  let coucou = d3.sankey()
+      .nodeWidth(15)
+      .nodePadding(10)
+      .nodeAlign(d3.sankeyJustify)
+      .extent([[5, 5], [width - 5, height - 5]]);
+  
+  let graph = coucou(data);
+
+  let link = svg.append("g")
+      .attr("fill", "none")
+      .attr("stroke-opacity", 0.3)
+      .selectAll("g")
+      .data(data.links)
+      .enter().append("g")
+        .style("mix-blend-mode", "multiply");
+  
+let path = link.append("path")
+      .attr("d", d3.sankeyLinkHorizontal()) //path
+      .attr("stroke", d => color(d.source.nom))
+      .attr("stroke-width", d => Math.max(1, (Math.abs(d.width))));
+  
+link.append("title")
+      .text(d => `${d.source.nom} → ${d.target.nom}\n${format(d.value/1000)}`);
+
+  
+let node = svg.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10)
+      .selectAll("g")
+    .data(data.nodes)
+    .enter().append("g")
+      .attr("transform", function(d) { return "translate(" + 0.5 + "," + 0.5 + ")"; })
+//.attr("transform", "translate(" + margin.left + "," + margin.right + ")")
+      .call(d3.drag()
+        .subject(function(d){return d})
+//        .on('start', function (d) { return node.attr("color","blue"); })
+        .on('start', function () { this.parentNode.appendChild(this); })
+        .on('drag', dragmove));
+
+   node.append("text")
+      .attr("x", function(d) { return d.x0 - 6; })
+      .attr("y", function(d) { return (d.y1 + d.y0) / 2; })
+      .attr("dy", "0.35em")
+      .attr("text-anchor", "end")
+      .text(function(d) { return d.nom; })
+      .filter(function(d) { return d.x0 < width / 2; })
+      .attr("x", function(d) { return d.x1 + 6; })
+      .attr("text-anchor", "start");
+  
+  node .append("rect")
+      .attr("x", d => d.x0)
+      .attr("y", d => d.y0)
+      .attr("height", d => d.y1- d.y0)
+      .attr("width", d => d.x1 - d.x0)
+      .attr("fill", d => color(d.nom))
+      .attr("stroke", "#000")
+      .append("title")
+        .text(d => `${d.nom}\n${format(d.cout)}`);
+ 
+   function dragmove(d) {
+      const rectX = d3.select(this).select("rect").attr("x");
+      const rectY = d3.select(this).select("rect").attr("y");
+      d.y0 = d.y0 + d3.event.dy;
+      d.x = d.x + d3.event.dx;
+      const xTranslate = d.x - rectX;
+      const yTranslate = d.y0 - rectY;
+      d3.select(this).attr("transform", "translate("+(0) + "," + (yTranslate) + ")");    
+//    d3.select(this).attr("transform", "translate(" + (d.x = Math.max(0, Math.min(width - d.dx, d3.event.x))) 
+//                      + "," + ( d.y = Math.max(0, Math.min(height - d.dy, d3.event.y)) ) + ")");
+      path.attr("d",d3.sankeyLinkHorizontal());
+      coucou.update(graph);
+   }
+	function format(d) {
+		return (`${f(d/1000)} M€`);
+	}
+
+	function color(name) {
+		return (couleur(name.replace(/ .*/, "")));
+	}
+
+
+
+
 </script>
 </body>
 </html>
