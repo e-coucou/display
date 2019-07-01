@@ -134,7 +134,7 @@ input#to {
 </style>
 <header>
   <div id='h1'>Display 4.0</div>
-  <aside >Mai, 2019<br><br> | v 3.05</aside>
+  <aside >Juillet, 2019<br><br> | v 3.06</aside>
   <div id='menu'></div>
 </header>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -2186,7 +2186,8 @@ function updateDashboard() {
     getDashData(url,'today');
     let first = new Date(Date.now());
     first.setHours(0,0,0,0);
-    first.setDate(1);
+	today.setUTCHours(24); // by ep
+    first.setUTCDate(1);   // console.log(today,today.toISOString());
     urlTime = '&from='+encodeURIComponent(first.toISOString())+'&to='+encodeURIComponent(today.toISOString());
     url = urlBase+encodeURIComponent(refDashboard)+urlTime+'&resolution=P1D';
     console.log(url);
@@ -2213,13 +2214,15 @@ function Dashboard() {
                 'mois':dashData.mois[i].values,
                 'jour':dashData.today[i].values
                 });
+//			console.log(dashData);
 //            console.log(i,ii);
-            data[i].mois[0]['div']=ii[0].cmj*10;
+//			console.log(data[i],ii[0]);
             data[i].jour[0]['div']=ii[0].cmj*10;
+            data[i].mois[0]['div']=ii[0].cmj*10;
             data[i]['c']=ii[0].c;
             data[i]['l']=ii[0].l;
         }
-        console.log('data',data);
+//        console.log('data',data);
         doGraphe(5);
 		var w = (width-margin.left-margin.right), h = window.innerHeight - margin.top - margin.bottom; // on test ...
 		// on ajuste le svg
@@ -2317,9 +2320,12 @@ function Dashboard() {
             .attr('cy',(d,i,a)=>{return centre-(inter)*Math.sin(rScale(i)-Math.PI/2);})
             .style('fill','#000');
 
-        article.append('circle').attr('cx',centre).attr('cy',centre).attr('r',inter/6)
+        article.append('circle').attr('cx',centre).attr('cy',centre).attr('r',inter/4)
             .style('fill',(d)=>{return d.nowp>10.0?'#006400':'#ff4500';})
             .style('stroke','#556B2F').style('stroke-width',1).raise().style('opacity',1.0);
+        article.append('text').attr('dx',centre).attr('dy',centre*1.05)
+            .style('fill','white').style('text-anchor','middle').style('font-size',12).style('font-weight', 'bold').text(d=> {return d.nowp.toFixed(0) + '%'});
+//            .style('stroke','#556B2F').style('stroke-width',1).raise().style('opacity',1.0);
 
 
 function testAdd(d) {
