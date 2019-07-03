@@ -8,5 +8,6 @@
 {"unité":"Distillation","tag":"B-FC23008","cmj":33000,"l":1,"c":2},
 {"unité":"HCN A","tag":"N-F82139","cmj":1700,"l":2,"c":0},
 {"unité":"HCN B","tag":"N-F82539","cmj":1700,"l":2,"c":1},
-{"unité":"NP99 RON","tag":"N-FCS10108","cmj":14000,"l":2,"c":2}
+{"unité":"HMTBn97","tag":"N-FCY84702","cmj":5000,"l":2,"c":2},
+{"unité":"NP99 RON","tag":"N-FCS10108","cmj":14000,"l":2,"c":3}
 ]
