@@ -2163,10 +2163,9 @@ function updateDashboard() {
     let refDashboard='';
     let now = new Date(Date.now());
     let today = new Date(now);
-    today.setHours(0,0,0,0);
+    today.setUTCHours(0,0,0,0);
     ref = today.getTime();
     let yesterday = new Date(ref-3600000*24);
-    let tomorrow = new Date(ref+3600000*24);
     //console.log(today,new Date(today).toISOString());
     urlTime = '&from='+encodeURIComponent(yesterday.toISOString())+'&to='+encodeURIComponent(today.toISOString());
     console.log(urlTime);
@@ -2185,7 +2184,7 @@ function updateDashboard() {
     console.log(url);
     getDashData(url,'today');
     let first = new Date(Date.now());
-    first.setHours(0,0,0,0);
+    first.setUTCHours(0,0,0,0);
 	today.setUTCHours(24); // by ep
     first.setUTCDate(1);   // console.log(today,today.toISOString());
     urlTime = '&from='+encodeURIComponent(first.toISOString())+'&to='+encodeURIComponent(today.toISOString());
@@ -2282,7 +2281,7 @@ function Dashboard() {
             .style('stroke-width',1).style('fill','#fffafa').style('opacity',1);
 		article.append('text').text((d,i)=> {
                 let ii = listeDashboard.filter(a=>{ return a.tag == d.nom;});
-                return ii[0].unité;})
+                return ii[0].unité+' - '+ii[0].tag;})
             .attr('dx',centre).attr('dy',-15) //1.8*inter)
             .style('text-anchor','middle').style('fill','blue');
         article.append('text').style('text-anchor','middle')
