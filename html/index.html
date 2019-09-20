@@ -2162,6 +2162,8 @@ function updateDashboard() {
     console.log(listeDashboard);
     let refDashboard='';
     let now = new Date(Date.now());
+	//console.log(now.getTimezoneOffset());
+	//now.setHours(now.getHours()-now.getTimezoneOffset()/60-1); console.log(now.toISOString());
     let today = new Date(now);
     today.setUTCHours(0,0,0,0);
     ref = today.getTime();
@@ -2173,12 +2175,13 @@ function updateDashboard() {
         refDashboard += (refDashboard==''?'':',')+listeDashboard[i].tag;
     }
     url = urlBase+encodeURIComponent(refDashboard)+urlTime+'&resolution=PT1H';
-    console.log(url);
+    console.log('hier : '+ url);
     getDashData(url,'hier');
     urlTime = '&from='+encodeURIComponent(new Date(now.getTime()-3000000).toISOString())+'&to='+encodeURIComponent(now.toISOString());
     url = urlBase+encodeURIComponent(refDashboard)+urlTime+'&resolution=PT5M';
     console.log(url);
     getDashData(url,'now');
+	now.setUTCHours(now.getUTCHours()+1); today.setHours(today.getHours()+today.getTimezoneOffset()/60)
     urlTime = '&from='+encodeURIComponent(today.toISOString())+'&to='+encodeURIComponent(now.toISOString());
     url = urlBase+encodeURIComponent(refDashboard)+urlTime+'&resolution=PT1H';
     console.log(url);
@@ -2203,11 +2206,11 @@ function updateDashboard() {
 	}
 }
 //-------------------------------------------------------------------------------------
-//  Afficahge du dashBoard
+//  Affichage du dashBoard
 //-
 function Dashboard() {
 
-    if (Object.keys(dashData).length >= 1) {  //xxx ep
+    if (Object.keys(dashData).length >= 10) {  //xxx ep
         console.log(dashData);
         let data = [];
         for (i=-1;++i<dashData.hier.length;) {
