@@ -1,0 +1,22 @@
+[
+{"unité":"CS2 A","tag":"3B-FC21037","cmj":9100,"l":0,"c":0,"q":0},
+{"unité":"CS2 B","tag":"3B-FC22537","cmj":9100,"l":0,"c":1,"q":0},
+{"unité":"MSH A","tag":"A_FCQXS20501","cmj":6000,"l":0,"c":2,"q":0},
+{"unité":"MSH B","tag":"A_FCQXS21501","cmj":6000,"l":0,"c":3,"q":0},
+{"unité":"Samourai","tag":"S-FC16325","cmj":7400,"l":1,"c":0,"q":0},
+{"unité":"Europe 2","tag":"E-FC16325","cmj":8600,"l":1,"c":1,"q":0},
+{"unité":"Distillation","tag":"B-FC23008","cmj":33000,"l":1,"c":2,"q":0},
+{"unité":"HCN A","tag":"N-FFCYS82121","cmj":1800,"l":2,"c":0,"q":0},
+{"unité":"HCN B","tag":"N-FFCYS82521","cmj":1800,"l":2,"c":1,"q":0},
+{"unité":"HCN","tag":"RON_Masse_HCN_Estimation_MMP_Théorique","cmj":3150,"l":2,"c":2,"q":1},
+{"unité":"HMTBn","tag":"N-F83335","cmj":22000,"l":2,"c":3,"q":0},
+{"unité":"HMTBn97","tag":"N-FC84712","cmj":11000,"l":2,"c":4,"q":0},
+{"unité":"NP99 RON","tag":"N-FCS10108","cmj":14000,"l":2,"c":5,"q":0},
+{"unité":"HCN 2000","tag":"FC22161","cmj":1800,"l":3,"c":0,"q":0},
+{"unité":"HCN 3000","tag":"FC32161","cmj":1800,"l":3,"c":1,"q":0},
+{"unité":"HCN 3500","tag":"FC35161","cmj":1800,"l":3,"c":2,"q":0},
+{"unité":"HMTBn 2000","tag":"F24117","cmj":22000,"l":4,"c":3,"q":0},
+{"unité":"HMTBn 3000","tag":"F34117","cmj":22000,"l":4,"c":3,"q":0},
+{"unité":"HMTBn 3500","tag":"F37117","cmj":22000,"l":4,"c":3,"q":0}
+]
+
